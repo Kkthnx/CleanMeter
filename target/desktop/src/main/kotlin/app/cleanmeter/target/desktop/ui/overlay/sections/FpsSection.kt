@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.cleanmeter.core.common.hardwaremonitor.FPS
@@ -64,7 +66,9 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                         fontSize = 12.sp,
                         lineHeight = 0.sp,
                         fontWeight = FontWeight.Normal,
-                        modifier = Modifier.width(50.dp).padding(bottom = 2.dp)
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.widthIn(min = 50.dp).padding(bottom = 2.dp)
                     )
                 }
             }
@@ -91,7 +95,13 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                         letterSpacing = 1.sp
                     )
 
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(
+                        modifier = Modifier.conditional(
+                            predicate = overlaySettings.sensors.frametime.isEnabled,
+                            ifTrue = { fillMaxWidth() },
+                        ),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         if (overlaySettings.sensors.framerate.isEnabled) {
                             Text(
                                 text = "${data.FPS}",
@@ -99,6 +109,7 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                                 fontSize = 16.sp,
                                 lineHeight = 0.sp,
                                 fontWeight = FontWeight.Normal,
+                                textAlign = TextAlign.End,
                                 modifier = Modifier.width(50.dp)
                             )
                         }
@@ -110,7 +121,9 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                                 fontSize = 12.sp,
                                 lineHeight = 0.sp,
                                 fontWeight = FontWeight.Normal,
-                                modifier = Modifier.width(50.dp)
+                                maxLines = 1,
+                                softWrap = false,
+                                modifier = Modifier.widthIn(min = 50.dp)
                             )
                         }
                     }
