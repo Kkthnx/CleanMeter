@@ -39,7 +39,7 @@ object HardwareMonitorProcessManager {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     while (scannerErr.hasNextLine()) {
-                        errOutput.add(scannerIn.nextLine())
+                        errOutput.add(scannerErr.nextLine())
                     }
                 } catch (e: Exception) {
                     return@launch
