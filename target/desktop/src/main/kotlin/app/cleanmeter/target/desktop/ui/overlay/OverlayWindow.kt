@@ -54,8 +54,17 @@ fun ApplicationScope.OverlayWindow(
         }
     }
 
+    // PresentMon also captures our own overlay window, so ignore our process when deciding if a game is running
+    val ownProcessName = remember {
+        ProcessHandle.current().info().command().orElse("").substringAfterLast('\\').lowercase()
+    }
+    val isGaming = overlayState.hardwareData?.PresentMonApps.orEmpty()
+        .any { it != "Auto" && it.lowercase() != ownProcessName }
+    val showOnlyOnGame = overlayState.overlaySettings!!.showOnlyOnGame
+
+    val fontScale = overlayState.overlaySettings!!.fontScale
     val overlayWindowState = rememberWindowState().apply {
-        size = if (overlayState.overlaySettings!!.isHorizontal) DpSize(1280.dp, 80.dp) else DpSize(350.dp, 1280.dp)
+        size = if (overlayState.overlaySettings!!.isHorizontal) DpSize(1280.dp * fontScale, 80.dp * fontScale) else DpSize(350.dp * fontScale, 1280.dp * fontScale)
         placement = WindowPlacement.Floating
     }
 
@@ -67,7 +76,7 @@ fun ApplicationScope.OverlayWindow(
     Window(
         state = overlayWindowState,
         onCloseRequest = { exitApplication() },
-        visible = isVisible,
+        visible = isVisible && (!showOnlyOnGame || isGaming),
         title = "Clean Meter",
         resizable = false,
         alwaysOnTop = true,

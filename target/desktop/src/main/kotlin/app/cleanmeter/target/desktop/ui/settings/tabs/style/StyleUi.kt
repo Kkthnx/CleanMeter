@@ -21,6 +21,7 @@ fun StyleUi(
     onOverlayCustomPosition: (IntOffset, Boolean) -> Unit,
     onLayoutChange: (Boolean) -> Unit,
     onOpacityChange: (Float) -> Unit,
+    onFontScaleChange: (Float) -> Unit,
     onGraphTypeChange: (OverlaySettings.ProgressType) -> Unit,
     onOverlayCustomPositionEnable: (Boolean) -> Unit,
     onDisplaySelect: (Int) -> Unit,
@@ -47,6 +48,11 @@ fun StyleUi(
     Opacity(
         overlaySettings = overlaySettings,
         onOpacityChange = onOpacityChange
+    )
+
+    FontSize(
+        overlaySettings = overlaySettings,
+        onFontScaleChange = onFontScaleChange
     )
 
     GraphType(

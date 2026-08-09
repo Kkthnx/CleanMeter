@@ -56,8 +56,10 @@ sealed class SettingsEvent {
     data class OverlayCustomPositionEnable(val isEnabled: Boolean) : SettingsEvent()
     data class OverlayOrientationSelect(val isHorizontal: Boolean) : SettingsEvent()
     data class OverlayOpacityChange(val opacity: Float) : SettingsEvent()
+    data class OverlayFontScaleChange(val fontScale: Float) : SettingsEvent()
     data class OverlayGraphChange(val progressType: OverlaySettings.ProgressType) : SettingsEvent()
     data class DarkThemeToggle(val isEnabled: Boolean) : SettingsEvent()
+    data class ShowOnlyOnGameToggle(val isEnabled: Boolean) : SettingsEvent()
     data class FpsApplicationSelect(val applicationName: String) : SettingsEvent()
     data class BoundarySet(val sensorType: SensorType, val boundaries: OverlaySettings.Sensor.GraphSensor.Boundaries) : SettingsEvent()
     data class PollingRateSelect(val pollingRate: Long) : SettingsEvent()
@@ -206,8 +208,10 @@ class SettingsViewModel : ViewModel() {
             is SettingsEvent.OverlayCustomPositionEnable -> onOverlayCustomPositionEnable(event.isEnabled, this)
             is SettingsEvent.OverlayOrientationSelect -> onOverlayOrientationSelect(event.isHorizontal, this)
             is SettingsEvent.OverlayOpacityChange -> onOverlayOpacityChange(event.opacity, this)
+            is SettingsEvent.OverlayFontScaleChange -> onOverlayFontScaleChange(event.fontScale, this)
             is SettingsEvent.OverlayGraphChange -> onOverlayGraphChange(event.progressType, this)
             is SettingsEvent.DarkThemeToggle -> onDarkModeToggle(event.isEnabled, this)
+            is SettingsEvent.ShowOnlyOnGameToggle -> onShowOnlyOnGameToggle(event.isEnabled, this)
             is SettingsEvent.FpsApplicationSelect -> onFpsApplicationSelect(event.applicationName, this)
             is SettingsEvent.BoundarySet -> onBoundarySet(event.sensorType, event.boundaries, this)
             is SettingsEvent.ConsentGiven -> onConsentGiven()
@@ -336,6 +340,13 @@ class SettingsViewModel : ViewModel() {
         }
     }
 
+    private fun onShowOnlyOnGameToggle(enabled: Boolean, settingsState: SettingsState) {
+        with(settingsState) {
+            val newSettings = overlaySettings?.copy(showOnlyOnGame = enabled)
+            OverlaySettingsRepository.setOverlaySettings(newSettings)
+        }
+    }
+
     private fun onOverlayGraphChange(progressType: OverlaySettings.ProgressType, settingsState: SettingsState) {
         with(settingsState) {
             val newSettings = overlaySettings?.copy(
@@ -350,6 +361,16 @@ class SettingsViewModel : ViewModel() {
         with(settingsState) {
             val newSettings = overlaySettings?.copy(
                 opacity = opacity,
+            )
+
+            OverlaySettingsRepository.setOverlaySettings(newSettings)
+        }
+    }
+
+    private fun onOverlayFontScaleChange(fontScale: Float, settingsState: SettingsState) {
+        with(settingsState) {
+            val newSettings = overlaySettings?.copy(
+                fontScale = fontScale,
             )
 
             OverlaySettingsRepository.setOverlaySettings(newSettings)

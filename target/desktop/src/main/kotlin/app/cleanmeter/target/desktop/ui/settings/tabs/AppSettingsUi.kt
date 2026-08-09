@@ -50,6 +50,7 @@ fun AppSettingsUi(
         ) {
             startWithWindowsCheckbox()
             startMinimizedCheckbox()
+            showOnlyOnGameCheckbox(overlaySettings, onEvent)
             ClearButton(label = "Clear app preferences", textColor = LocalColorScheme.current.text.heading) {
                 PreferencesRepository.clear()
             }
@@ -163,6 +164,17 @@ private fun startMinimizedCheckbox() {
         onCheckedChange = { value ->
             state = value
             PreferencesRepository.setPreferenceBoolean(PREFERENCE_START_MINIMIZED, value)
+        },
+    )
+}
+
+@Composable
+private fun showOnlyOnGameCheckbox(overlaySettings: OverlaySettings, onEvent: (SettingsEvent) -> Unit) {
+    CheckboxWithLabel(
+        label = "Show only while in game",
+        checked = overlaySettings.showOnlyOnGame,
+        onCheckedChange = { value ->
+            onEvent(SettingsEvent.ShowOnlyOnGameToggle(value))
         },
     )
 }

@@ -16,8 +16,10 @@ data class OverlaySettings(
     val positionY: Int = 0,
     val isPositionLocked: Boolean = true,
     val opacity: Float = 1f,
+    val fontScale: Float = 1f,
     val pollingRate: Long = 500,
     val isLoggingEnabled: Boolean = false,
+    val showOnlyOnGame: Boolean = false,
     val sensors: Sensors = Sensors(),
 ) {
     @Serializable
