@@ -9,6 +9,10 @@ data class HardwareMonitorData(
     val Sensors: List<Sensor>,
     val PresentMonApps: List<String>,
 ) {
+    // Built once per data frame so the overlay's many per-frame reads are O(1)
+    // lookups instead of a linear scan over every sensor each time.
+    val sensorsByIdentifier: Map<String, Sensor> by lazy { Sensors.associateBy { it.Identifier } }
+
     @Serializable
     data class Hardware(
         val Name: String,
@@ -81,7 +85,7 @@ fun HardwareMonitorData.readings(namePart: String): List<HardwareMonitorData.Sen
     return Sensors.filter { it.Identifier.contains(namePart, true) || it.Name.contains(namePart, true) }
         .sortedBy { it.SensorType }
 }
-fun HardwareMonitorData.getReading(identifier: String) = Sensors.firstOrNull { it.Identifier == identifier }
+fun HardwareMonitorData.getReading(identifier: String) = sensorsByIdentifier[identifier]
 fun HardwareMonitorData.getReading(identifier: String, namePart: String) = Sensors.firstOrNull { it.Identifier == identifier && it.Name.contains(namePart, true) }
 
 val HardwareMonitorData.FPS: Int
