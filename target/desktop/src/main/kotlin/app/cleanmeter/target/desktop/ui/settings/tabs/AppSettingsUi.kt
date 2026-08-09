@@ -1,9 +1,7 @@
 package app.cleanmeter.target.desktop.ui.settings.tabs
 
 import ClearButton
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,12 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import app.cleanmeter.core.designsystem.LocalColorScheme
-import app.cleanmeter.core.designsystem.LocalTypography
 import app.cleanmeter.core.os.win32.WinRegistry
 import app.cleanmeter.core.os.PREFERENCE_START_MINIMIZED
 import app.cleanmeter.core.os.PreferencesRepository
 import app.cleanmeter.target.desktop.model.OverlaySettings
 import app.cleanmeter.target.desktop.ui.components.CheckboxWithLabel
+import app.cleanmeter.target.desktop.ui.components.InfoTooltip
 import app.cleanmeter.target.desktop.ui.components.StyleCard
 import app.cleanmeter.target.desktop.ui.components.dropdown.DropdownMenu
 import app.cleanmeter.target.desktop.ui.components.section.Section
@@ -119,7 +116,6 @@ fun AppSettingsUi(
     FooterUi(modifier = Modifier)
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun startWithWindowsCheckbox() {
     var state by remember { mutableStateOf(WinRegistry.isAppRegisteredToStartWithWindows()) }
@@ -130,15 +126,7 @@ private fun startWithWindowsCheckbox() {
         }
     }
 
-    TooltipArea(
-        delayMillis = 0,
-        tooltip = {
-            Text(
-                text = "Temporarily disabled.",
-                style = LocalTypography.current.labelM,
-                color = LocalColorScheme.current.text.heading,
-            )
-        }) {
+    InfoTooltip(text = "Launch CleanMeter automatically when Windows starts. Temporarily disabled.") {
         CheckboxWithLabel(
             label = "Start with Windows",
             checked = state,
@@ -158,25 +146,29 @@ private fun startWithWindowsCheckbox() {
 @Composable
 private fun startMinimizedCheckbox() {
     var state by remember { mutableStateOf(PreferencesRepository.getPreferenceBoolean(PREFERENCE_START_MINIMIZED)) }
-    CheckboxWithLabel(
-        label = "Start Minimized",
-        checked = state,
-        onCheckedChange = { value ->
-            state = value
-            PreferencesRepository.setPreferenceBoolean(PREFERENCE_START_MINIMIZED, value)
-        },
-    )
+    InfoTooltip(text = "Launch straight to the system tray without opening this settings window.") {
+        CheckboxWithLabel(
+            label = "Start Minimized",
+            checked = state,
+            onCheckedChange = { value ->
+                state = value
+                PreferencesRepository.setPreferenceBoolean(PREFERENCE_START_MINIMIZED, value)
+            },
+        )
+    }
 }
 
 @Composable
 private fun showOnlyOnGameCheckbox(overlaySettings: OverlaySettings, onEvent: (SettingsEvent) -> Unit) {
-    CheckboxWithLabel(
-        label = "Show only while in game",
-        checked = overlaySettings.showOnlyOnGame,
-        onCheckedChange = { value ->
-            onEvent(SettingsEvent.ShowOnlyOnGameToggle(value))
-        },
-    )
+    InfoTooltip(text = "Hide the overlay on the desktop and show it only while a game is running. Detection can take a few seconds after a game opens or closes.") {
+        CheckboxWithLabel(
+            label = "Show only while in game",
+            checked = overlaySettings.showOnlyOnGame,
+            onCheckedChange = { value ->
+                onEvent(SettingsEvent.ShowOnlyOnGameToggle(value))
+            },
+        )
+    }
 }
 
 @Composable
