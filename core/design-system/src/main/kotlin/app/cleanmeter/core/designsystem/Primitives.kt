@@ -12,10 +12,13 @@ object Primitives {
         val Gray400 = Color(0xFF94969c)
         val Gray500 = Color(0xFF85888e)
         val Gray600 = Color(0xFF61646c)
-        val Gray700 = Color(0xFF333741)
-        val Gray800 = Color(0xFF1f242f)
-        val Gray900 = Color(0xFF161b26)
-        val Gray950 = Color(0xFF0c111d)
+        // Dark surfaces carry a slight green bias so the window chrome sits in the
+        // same deep green-black world as the overlay; lighter greys stay neutral
+        // to keep text and border contrast unchanged.
+        val Gray700 = Color(0xFF2e3630)
+        val Gray800 = Color(0xFF1a231d)
+        val Gray900 = Color(0xFF121a15)
+        val Gray950 = Color(0xFF0a100d)
 
     }
 
