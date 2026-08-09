@@ -54,6 +54,8 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                         fontSize = 16.sp,
                         lineHeight = 0.sp,
                         fontWeight = FontWeight.Normal,
+                        maxLines = 1,
+                        softWrap = false,
                         modifier = Modifier.width(50.dp)
                     )
                 }
@@ -110,6 +112,8 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                                 lineHeight = 0.sp,
                                 fontWeight = FontWeight.Normal,
                                 textAlign = TextAlign.End,
+                                maxLines = 1,
+                                softWrap = false,
                                 modifier = Modifier.width(50.dp)
                             )
                         }

@@ -37,6 +37,7 @@ internal fun GpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                     progressUnit = "°C",
                     label = { "${it.roundToInt()}" },
                     boundaries = overlaySettings.sensors.gpuTemp.boundaries,
+                    zeroIsMissing = true,
                 )
             }
 

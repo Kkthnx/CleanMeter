@@ -39,6 +39,7 @@ internal fun CpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                     progressUnit = "°C",
                     label = { "${it.roundToInt()}" },
                     boundaries = overlaySettings.sensors.cpuTemp.boundaries,
+                    zeroIsMissing = true,
                 )
             }
 
