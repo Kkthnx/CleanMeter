@@ -15,11 +15,12 @@ internal fun CustomReadingProgress(
     boundaries: OverlaySettings.Sensor.GraphSensor.Boundaries
 ) {
     val reading = data.getReading(customReadingId)
+    val isMissing = reading == null
     val value = (reading?.Value ?: 1f).coerceAtLeast(1f)
 
     Progress(
-        value = value / 100f,
-        label = label(value),
+        value = if (isMissing) 0f else value / 100f,
+        label = if (isMissing) "--" else label(value),
         unit = progressUnit,
         progressType = progressType,
         boundaries = boundaries
