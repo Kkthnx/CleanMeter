@@ -60,6 +60,7 @@ sealed class SettingsEvent {
     data class OverlayGraphChange(val progressType: OverlaySettings.ProgressType) : SettingsEvent()
     data class DarkThemeToggle(val isEnabled: Boolean) : SettingsEvent()
     data class ShowOnlyOnGameToggle(val isEnabled: Boolean) : SettingsEvent()
+    data class ShowFrameLowsToggle(val isEnabled: Boolean) : SettingsEvent()
     data class FpsApplicationSelect(val applicationName: String) : SettingsEvent()
     data class BoundarySet(val sensorType: SensorType, val boundaries: OverlaySettings.Sensor.GraphSensor.Boundaries) : SettingsEvent()
     data class PollingRateSelect(val pollingRate: Long) : SettingsEvent()
@@ -212,6 +213,7 @@ class SettingsViewModel : ViewModel() {
             is SettingsEvent.OverlayGraphChange -> onOverlayGraphChange(event.progressType, this)
             is SettingsEvent.DarkThemeToggle -> onDarkModeToggle(event.isEnabled, this)
             is SettingsEvent.ShowOnlyOnGameToggle -> onShowOnlyOnGameToggle(event.isEnabled, this)
+            is SettingsEvent.ShowFrameLowsToggle -> onShowFrameLowsToggle(event.isEnabled, this)
             is SettingsEvent.FpsApplicationSelect -> onFpsApplicationSelect(event.applicationName, this)
             is SettingsEvent.BoundarySet -> onBoundarySet(event.sensorType, event.boundaries, this)
             is SettingsEvent.ConsentGiven -> onConsentGiven()
@@ -343,6 +345,13 @@ class SettingsViewModel : ViewModel() {
     private fun onShowOnlyOnGameToggle(enabled: Boolean, settingsState: SettingsState) {
         with(settingsState) {
             val newSettings = overlaySettings?.copy(showOnlyOnGame = enabled)
+            OverlaySettingsRepository.setOverlaySettings(newSettings)
+        }
+    }
+
+    private fun onShowFrameLowsToggle(enabled: Boolean, settingsState: SettingsState) {
+        with(settingsState) {
+            val newSettings = overlaySettings?.copy(showFrameLows = enabled)
             OverlaySettingsRepository.setOverlaySettings(newSettings)
         }
     }

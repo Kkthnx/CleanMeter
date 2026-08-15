@@ -31,6 +31,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.cleanmeter.core.common.hardwaremonitor.FPS
+import app.cleanmeter.core.common.hardwaremonitor.FPS1PercentLow
+import app.cleanmeter.core.common.hardwaremonitor.FPS01PercentLow
 import app.cleanmeter.core.common.hardwaremonitor.Frametime
 import app.cleanmeter.core.common.hardwaremonitor.HardwareMonitorData
 import app.cleanmeter.core.designsystem.LocalColorScheme
@@ -58,6 +60,10 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                         softWrap = false,
                         modifier = Modifier.widthIn(min = 50.dp)
                     )
+                }
+
+                if (overlaySettings.showFrameLows && overlaySettings.sensors.framerate.isEnabled) {
+                    FrameLows(data)
                 }
 
                 if (overlaySettings.sensors.frametime.isEnabled) {
@@ -133,11 +139,43 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                     }
                 }
 
+                if (overlaySettings.showFrameLows && overlaySettings.sensors.framerate.isEnabled) {
+                    FrameLows(data)
+                }
+
                 if (overlaySettings.sensors.frametime.isEnabled) {
                     FrametimeGraph(data = data, isHorizontal = false)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FrameLows(data: HardwareMonitorData) {
+    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        LowReading(label = "1%", value = data.FPS1PercentLow)
+        LowReading(label = ".1%", value = data.FPS01PercentLow)
+    }
+}
+
+@Composable
+private fun LowReading(label: String, value: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.5f),
+            fontSize = 8.sp,
+            lineHeight = 0.sp,
+            fontWeight = FontWeight.Normal,
+        )
+        Text(
+            text = "$value",
+            color = Color.White,
+            fontSize = 11.sp,
+            lineHeight = 0.sp,
+            fontWeight = FontWeight.Normal,
+        )
     }
 }
 

@@ -51,6 +51,7 @@ fun AppSettingsUi(
             startWithWindowsCheckbox()
             startMinimizedCheckbox()
             showOnlyOnGameCheckbox(overlaySettings, onEvent)
+            showFrameLowsCheckbox(overlaySettings, onEvent)
             ClearButton(label = "Clear app preferences", textColor = LocalColorScheme.current.text.heading) {
                 PreferencesRepository.clear()
             }
@@ -175,6 +176,19 @@ private fun showOnlyOnGameCheckbox(overlaySettings: OverlaySettings, onEvent: (S
             checked = overlaySettings.showOnlyOnGame,
             onCheckedChange = { value ->
                 onEvent(SettingsEvent.ShowOnlyOnGameToggle(value))
+            },
+        )
+    }
+}
+
+@Composable
+private fun showFrameLowsCheckbox(overlaySettings: OverlaySettings, onEvent: (SettingsEvent) -> Unit) {
+    InfoTooltip(text = "Show the 1% and 0.1% low FPS next to the frame rate. These are the slowest frames over the last few seconds and are the real measure of stutter.") {
+        CheckboxWithLabel(
+            label = "Show 1% / 0.1% low FPS",
+            checked = overlaySettings.showFrameLows,
+            onCheckedChange = { value ->
+                onEvent(SettingsEvent.ShowFrameLowsToggle(value))
             },
         )
     }

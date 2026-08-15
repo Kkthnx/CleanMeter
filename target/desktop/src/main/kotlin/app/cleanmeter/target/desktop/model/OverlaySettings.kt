@@ -20,6 +20,7 @@ data class OverlaySettings(
     val pollingRate: Long = 500,
     val isLoggingEnabled: Boolean = false,
     val showOnlyOnGame: Boolean = false,
+    val showFrameLows: Boolean = false,
     val sensors: Sensors = Sensors(),
 ) {
     @Serializable

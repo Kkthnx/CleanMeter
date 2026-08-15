@@ -78,6 +78,7 @@ public class MonitorPoller(
                 }
             }
 
+            _presentMonPoller.UpdateAggregates();
             WriteDataToStream(writer, sharedMemoryData);
 
             if (_socketHost.HasConnections())
@@ -235,6 +236,9 @@ public class MonitorPoller(
         sensorList.Add(MapSensor(_presentMonPoller.Displayed));
         sensorList.Add(MapSensor(_presentMonPoller.Presented));
         sensorList.Add(MapSensor(_presentMonPoller.Frametime));
+        sensorList.Add(MapSensor(_presentMonPoller.FpsAverage));
+        sensorList.Add(MapSensor(_presentMonPoller.Fps1PercentLow));
+        sensorList.Add(MapSensor(_presentMonPoller.Fps01PercentLow));
 
         sharedMemoryData.Sensors = sensorList;
         sharedMemoryData.Hardwares = hardwareList;

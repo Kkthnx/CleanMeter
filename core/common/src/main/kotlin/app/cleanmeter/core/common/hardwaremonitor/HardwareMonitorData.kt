@@ -95,6 +95,17 @@ fun HardwareMonitorData.getReading(identifier: String, namePart: String) = Senso
 val HardwareMonitorData.FPS: Int
     get() = (1000f / (getReading("/presentmon/frametime")?.Value ?: 1f)).toInt()
 
+// Computed in the backend from every frame, so these are real percentiles and
+// not something the sampled overlay could derive on its own.
+val HardwareMonitorData.FPSAverage: Int
+    get() = (getReading("/presentmon/fps_average")?.Value ?: 0f).toInt()
+
+val HardwareMonitorData.FPS1PercentLow: Int
+    get() = (getReading("/presentmon/fps_1_low")?.Value ?: 0f).toInt()
+
+val HardwareMonitorData.FPS01PercentLow: Int
+    get() = (getReading("/presentmon/fps_01_low")?.Value ?: 0f).toInt()
+
 val HardwareMonitorData.Frametime: Float
     get() = (getReading("/presentmon/frametime")?.Value ?: 0f).coerceAtLeast(0f)
 
