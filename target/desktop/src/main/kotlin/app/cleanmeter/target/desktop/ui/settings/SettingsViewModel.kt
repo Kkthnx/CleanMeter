@@ -46,7 +46,6 @@ data class SettingsState(
     val hardwareData: HardwareMonitorData? = null,
     val isRecording: Boolean = false,
     val adminConsent: Boolean = false,
-    val isRuntimeAvailable: Boolean = false,
     val logSink: String = ""
 )
 
@@ -90,7 +89,6 @@ class SettingsViewModel : ViewModel() {
         observeRecordingHotkey()
         observeRecordingState()
         sendInitialPollingRate()
-        checkForNetCoreRuntime()
         checkIfLoggingIsEnabled()
 
         _state.update {
@@ -130,13 +128,6 @@ class SettingsViewModel : ViewModel() {
                 }
                 delay(500)
             }
-        }
-    }
-
-    private fun checkForNetCoreRuntime() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val isRuntimeAvailable = HardwareMonitorProcessManager.checkRuntime()
-            _state.update { it.copy(isRuntimeAvailable = isRuntimeAvailable) }
         }
     }
 

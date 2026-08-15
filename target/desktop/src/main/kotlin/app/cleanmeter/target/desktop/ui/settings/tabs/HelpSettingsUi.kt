@@ -88,16 +88,7 @@ internal fun HelpSettingsUi(
             FrequentlyAskedQuestions(
                 "The sensors look wrong" to buildAnnotatedString { append("Try setting up each sensor via the Stats tab") },
                 "Neither sensors dropdown or the overlay are showing up" to buildAnnotatedString {
-                    append("You need to have ")
-                    pushStringAnnotation(
-                        "click",
-                        "https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.11-windows-x64-installer"
-                    )
-                    withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
-                        append(".NET Core Framework")
-                    }
-                    pop()
-                    append(" installed")
+                    append("The sensor service needs administrator access to read your hardware. Close CleanMeter and reopen it, accepting the elevation prompt, then set up each sensor in the Stats tab.")
                 },
                 "Having problems like crashes or still nothing showing up?" to buildAnnotatedString {
                     append("Launch the app with ")
