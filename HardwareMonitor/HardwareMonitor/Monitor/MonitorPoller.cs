@@ -52,7 +52,6 @@ public class MonitorPoller(
 
         using var memoryStream = new MemoryStream();
         using var writer = new BinaryWriter(memoryStream);
-        var accumulator = 0;
 
         WriteDataToStream(writer, sharedMemoryData);
 
@@ -89,13 +88,6 @@ public class MonitorPoller(
                 //logger.LogInformation("No clients connected, not sending data");
             }
 
-            if (accumulator >= 1000)
-            {
-                GC.Collect();
-                accumulator = 0;
-            }
-
-            accumulator += 500;
             await Task.Delay(_pollingRate, stoppingToken);
         }
 
