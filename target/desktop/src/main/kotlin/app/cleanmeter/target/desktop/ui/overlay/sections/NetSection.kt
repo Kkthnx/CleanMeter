@@ -167,7 +167,7 @@ private fun NetGraph(data: HardwareMonitorData, isHorizontal: Boolean, overlaySe
         val upRate = data.getReading(overlaySettings.sensors.upRate.customReadingId)?.Value ?: 0f
 
         upRatePoints.add((upRate / largestUp.floatValue.coerceAtLeast(1f)).coerceIn(0f, 1f))
-        downRatePoints.add((dlRate / largestDown.floatValue + .2f).coerceIn(0f, 1f))
+        downRatePoints.add((dlRate / largestDown.floatValue.coerceAtLeast(1f) + .2f).coerceIn(0f, 1f))
         if (upRatePoints.size > listSize) upRatePoints.removeFirst()
         if (downRatePoints.size > listSize) downRatePoints.removeFirst()
         largestUp.floatValue = upRatePoints.max()

@@ -2,7 +2,6 @@ package app.cleanmeter.core.os.hardwaremonitor
 
 import app.cleanmeter.core.os.PREFERENCE_PERMISSION_CONSENT
 import app.cleanmeter.core.os.PreferencesRepository
-import app.cleanmeter.core.os.util.getByteBuffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -14,11 +13,6 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.io.RandomAccessFile
-import java.net.InetAddress
-import java.net.InetSocketAddress
-import java.net.Socket
-import java.net.SocketException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -53,85 +47,6 @@ sealed class Packet {
     }
 }
 
-object SocketClient {
-
-    private var socket = Socket()
-    private var pollingRate = 500L
-
-    private val packetChannel = Channel<Packet>(Channel.CONFLATED)
-    val packetFlow: Flow<Packet> = packetChannel.receiveAsFlow()
-
-    init {
-        if (PreferencesRepository.getPreferenceBoolean(PREFERENCE_PERMISSION_CONSENT, false)) {
-            connect()
-        }
-    }
-
-    private fun connect() = CoroutineScope(Dispatchers.IO).launch {
-        while (true) {
-            // try open a connection with HardwareMonitor
-            if (!socket.isConnected) {
-                try {
-                    println("Trying to connect")
-                    socket = Socket()
-                    socket.connect(InetSocketAddress(InetAddress.getLoopbackAddress(), 31337))
-                    println("Connected ${socket.isConnected}")
-                } catch (ex: Exception) {
-                    println("Couldn't connect ${ex.message}")
-                    ex.printStackTrace()
-                } finally {
-                    delay(pollingRate)
-                    continue
-                }
-            }
-
-            val inputStream = socket.inputStream
-            while (socket.isConnected) {
-                try {
-                    val command = getCommand(inputStream)
-                    val size = getSize(inputStream)
-                    when (command) {
-                        Command.Data -> packetChannel.trySend(Packet.Data(inputStream.readNBytes(size)))
-                        Command.PresentMonApps -> packetChannel.trySend(Packet.PresentMonApps(inputStream.readNBytes(size)))
-                        Command.RefreshPresentMonApps -> Unit
-                        Command.SelectPresentMonApp -> Unit
-                        Command.SelectPollingRate -> Unit
-                    }
-                } catch (e: SocketException) {
-                    println("Error while listening for packets")
-                    socket.close()
-                    socket = Socket()
-                    e.printStackTrace()
-                }
-            }
-        }
-    }
-
-    private fun getCommand(inputStream: InputStream): Command {
-        val buffer = getByteBuffer(inputStream, COMMAND_SIZE)
-        return Command.fromValue(buffer.short)
-    }
-
-    private fun getSize(inputStream: InputStream): Int {
-        val buffer = getByteBuffer(inputStream, LENGTH_SIZE)
-        return buffer.int
-    }
-
-    fun setPollingRate(pollingRate: Long) {
-        println("Setting PollingRate to $pollingRate")
-        this.pollingRate = pollingRate
-    }
-
-    fun sendPacket(packet: Packet) {
-        if (socket.isConnected) {
-            socket.outputStream.apply {
-                write(packet.toByteArray())
-                flush()
-            }
-        }
-    }
-}
-
 object PipeClient {
 
     private val pipeName = "\\\\.\\pipe\\HardwareMonitor_31337"
@@ -149,19 +64,21 @@ object PipeClient {
     }
 
     private fun connect() = CoroutineScope(Dispatchers.IO).launch {
+        // Only log connect state changes, otherwise a missing backend floods the
+        // console with a line every polling interval.
+        var reportedWaiting = false
         while (true) {
             if (!isConnected()) {
                 try {
-                    println("Trying to connect to pipe: $pipeName")
                     close()
-
-                    // Open pipe as stream - this should work correctly
                     pipeInputStream = FileInputStream(pipeName)
-                    // Don't open output stream until we need to send
-                    println("Connected to named pipe for reading")
+                    println("Connected to the HardwareMonitor pipe")
+                    reportedWaiting = false
                 } catch (ex: Exception) {
-                    println("Couldn't connect to pipe: ${ex.message}")
-                    ex.printStackTrace()
+                    if (!reportedWaiting) {
+                        println("Waiting for the HardwareMonitor service to start...")
+                        reportedWaiting = true
+                    }
                     close()
                     delay(pollingRate)
                     continue

@@ -41,7 +41,6 @@ import app.cleanmeter.core.common.hardwaremonitor.networkReadings
 import app.cleanmeter.core.designsystem.LocalColorScheme
 import app.cleanmeter.core.designsystem.LocalTypography
 import app.cleanmeter.target.desktop.ui.AppTheme
-import app.cleanmeter.target.desktop.ui.components.RuntimeToast
 import app.cleanmeter.target.desktop.ui.components.SettingsTab
 import app.cleanmeter.target.desktop.ui.components.TopBar
 import app.cleanmeter.target.desktop.ui.components.UpdateToast
@@ -102,11 +101,8 @@ fun WindowScope.Settings(
                     )
                 }
 
-                if (updaterState !is UpdateState.NotAvailable && settingsState.isRuntimeAvailable) {
+                if (updaterState !is UpdateState.NotAvailable) {
                     UpdateToast()
-                }
-                if (!settingsState.isRuntimeAvailable) {
-                    RuntimeToast()
                 }
             }
         }
@@ -244,6 +240,7 @@ private fun TabContent(
             },
             onLayoutChange = { viewModel.onEvent(SettingsEvent.OverlayOrientationSelect(it)) },
             onOpacityChange = { viewModel.onEvent(SettingsEvent.OverlayOpacityChange(it)) },
+            onFontScaleChange = { viewModel.onEvent(SettingsEvent.OverlayFontScaleChange(it)) },
             onGraphTypeChange = { viewModel.onEvent(SettingsEvent.OverlayGraphChange(it)) },
             onOverlayCustomPositionEnable = { viewModel.onEvent(SettingsEvent.OverlayCustomPositionEnable(it)) },
             onDisplaySelect = {

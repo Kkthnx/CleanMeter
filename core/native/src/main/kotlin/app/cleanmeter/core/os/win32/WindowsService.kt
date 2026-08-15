@@ -53,17 +53,36 @@ class WindowsService {
     }
 
     companion object {
+        // WS_EX_NOACTIVATE keeps the overlay from stealing focus from the game;
+        // JNA's WinUser does not expose this constant, so define it here.
+        private const val WS_EX_NOACTIVATE = 0x08000000
+        private val HWND_TOPMOST = HWND(Pointer.createConstant(-1L))
+
         fun changeWindowTransparency(w: Component, isTransparent: Boolean) {
             val hwnd = HWND().apply { pointer = Native.getComponentPointer(w) }
             val wl = if (isTransparent) {
                 User32.INSTANCE.GetWindowLong(
                     hwnd,
                     WinUser.GWL_EXSTYLE
-                ) or WinUser.WS_EX_LAYERED or WinUser.WS_EX_TRANSPARENT
+                ) or WinUser.WS_EX_LAYERED or WinUser.WS_EX_TRANSPARENT or WS_EX_NOACTIVATE
             } else {
                 User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE) or WinUser.WS_EX_LAYERED and WinUser.WS_EX_TRANSPARENT.inv()
             }
             User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl)
+        }
+
+        // Re-assert top-most z-order. A game entering fullscreen bumps other
+        // top-most windows below it, so overlays re-assert periodically to stay
+        // visible over borderless / windowed-fullscreen. This cannot draw over
+        // true exclusive fullscreen, which owns the display surface.
+        fun reassertTopmost(w: Component) {
+            val hwnd = HWND().apply { pointer = Native.getComponentPointer(w) }
+            User32.INSTANCE.SetWindowPos(
+                hwnd,
+                HWND_TOPMOST,
+                0, 0, 0, 0,
+                WinUser.SWP_NOMOVE or WinUser.SWP_NOSIZE or WinUser.SWP_NOACTIVATE,
+            )
         }
 
         fun isProcessElevated(): Boolean {

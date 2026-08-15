@@ -26,7 +26,7 @@ internal object KeyboardManager {
             GlobalScreen.addNativeKeyListener(object : NativeKeyListener {
                 override fun nativeKeyReleased(nativeEvent: NativeKeyEvent) {
                     val isCtrl = nativeEvent.modifiers.and(NativeKeyEvent.CTRL_MASK) > 0
-                    val isAlt = nativeEvent.modifiers.and(NativeKeyEvent.VC_ALT) > 0
+                    val isAlt = nativeEvent.modifiers.and(NativeKeyEvent.ALT_MASK) > 0
 
                     if (!isCtrl && !isAlt) return
 

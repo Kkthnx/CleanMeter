@@ -22,6 +22,7 @@ import app.cleanmeter.target.desktop.ui.components.Pill
 import app.cleanmeter.target.desktop.ui.components.ProgressLabel
 import app.cleanmeter.target.desktop.ui.components.ProgressUnit
 import java.util.*
+import kotlin.math.roundToInt
 
 @Composable
 internal fun CpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorData) {
@@ -36,8 +37,9 @@ internal fun CpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                     customReadingId = overlaySettings.sensors.cpuTemp.customReadingId,
                     progressType = overlaySettings.progressType,
                     progressUnit = "°C",
-                    label = { "${it.toInt()}" },
+                    label = { "${it.roundToInt()}" },
                     boundaries = overlaySettings.sensors.cpuTemp.boundaries,
+                    zeroIsMissing = true,
                 )
             }
 

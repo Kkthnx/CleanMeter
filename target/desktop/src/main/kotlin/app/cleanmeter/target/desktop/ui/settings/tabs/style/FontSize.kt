@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.Icon
+import androidx.compose.material.Text
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.cleanmeter.core.designsystem.LocalColorScheme
 import app.cleanmeter.target.desktop.model.OverlaySettings
 import app.cleanmeter.target.desktop.ui.components.SliderThumb
@@ -20,15 +20,18 @@ import app.cleanmeter.target.desktop.ui.components.coercedValueAsFraction
 import app.cleanmeter.target.desktop.ui.components.drawTrack
 import app.cleanmeter.target.desktop.ui.components.section.CollapsibleSection
 
+private const val MIN_SCALE = 0.75f
+private const val MAX_SCALE = 1.75f
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun Opacity(
+internal fun FontSize(
     overlaySettings: OverlaySettings,
-    onOpacityChange: (Float) -> Unit
+    onFontScaleChange: (Float) -> Unit
 ) {
     CollapsibleSection(
-        title = "OPACITY",
-        tooltip = "How see-through the overlay is. Lower for a subtler overlay, higher to make it stand out.",
+        title = "FONT SIZE",
+        tooltip = "Scale the whole overlay up or down. Larger is easier to read from across the room.",
     ) {
         Column {
             val inactiveTrackColor = LocalColorScheme.current.background.surfaceSunkenSubtle
@@ -36,11 +39,12 @@ internal fun Opacity(
             val inactiveTickColor = LocalColorScheme.current.background.surfaceSunken
             val activeTickColor = LocalColorScheme.current.background.brandHover
             Slider(
-                value = overlaySettings.opacity,
+                value = overlaySettings.fontScale,
                 onValueChange = {
-                    onOpacityChange(it.coerceIn(0f, 1f))
+                    onFontScaleChange(it.coerceIn(MIN_SCALE, MAX_SCALE))
                 },
-                steps = 9,
+                valueRange = MIN_SCALE..MAX_SCALE,
+                steps = 3,
                 track = { sliderState ->
                     Canvas(
                         Modifier
@@ -63,9 +67,8 @@ internal fun Opacity(
                 }
             )
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Icon(painterResource("icons/no_brightness.svg"), "", tint = LocalColorScheme.current.icon.bolderActive)
-                Icon(painterResource("icons/mid_brightness.svg"), "", tint = LocalColorScheme.current.icon.bolderActive)
-                Icon(painterResource("icons/full_brightness.svg"), "", tint = LocalColorScheme.current.icon.bolderActive)
+                Text(text = "A", fontSize = 12.sp, color = LocalColorScheme.current.icon.bolderActive)
+                Text(text = "A", fontSize = 20.sp, color = LocalColorScheme.current.icon.bolderActive)
             }
         }
     }

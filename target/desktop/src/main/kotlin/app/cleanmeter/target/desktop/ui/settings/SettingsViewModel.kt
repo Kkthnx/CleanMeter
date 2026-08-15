@@ -30,6 +30,10 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
 
+private const val MAX_LOG_BYTES = 256 * 1024
+private const val MAX_LOG_CHARS = 20_000
+private const val MAX_RECORDING_FRAMES = 100_000
+
 sealed interface Log {
     @JvmInline
     value class Info(val value: String)
@@ -42,7 +46,6 @@ data class SettingsState(
     val hardwareData: HardwareMonitorData? = null,
     val isRecording: Boolean = false,
     val adminConsent: Boolean = false,
-    val isRuntimeAvailable: Boolean = false,
     val logSink: String = ""
 )
 
@@ -56,8 +59,11 @@ sealed class SettingsEvent {
     data class OverlayCustomPositionEnable(val isEnabled: Boolean) : SettingsEvent()
     data class OverlayOrientationSelect(val isHorizontal: Boolean) : SettingsEvent()
     data class OverlayOpacityChange(val opacity: Float) : SettingsEvent()
+    data class OverlayFontScaleChange(val fontScale: Float) : SettingsEvent()
     data class OverlayGraphChange(val progressType: OverlaySettings.ProgressType) : SettingsEvent()
     data class DarkThemeToggle(val isEnabled: Boolean) : SettingsEvent()
+    data class ShowOnlyOnGameToggle(val isEnabled: Boolean) : SettingsEvent()
+    data class ShowFrameLowsToggle(val isEnabled: Boolean) : SettingsEvent()
     data class FpsApplicationSelect(val applicationName: String) : SettingsEvent()
     data class BoundarySet(val sensorType: SensorType, val boundaries: OverlaySettings.Sensor.GraphSensor.Boundaries) : SettingsEvent()
     data class PollingRateSelect(val pollingRate: Long) : SettingsEvent()
@@ -83,7 +89,6 @@ class SettingsViewModel : ViewModel() {
         observeRecordingHotkey()
         observeRecordingState()
         sendInitialPollingRate()
-        checkForNetCoreRuntime()
         checkIfLoggingIsEnabled()
 
         _state.update {
@@ -112,19 +117,17 @@ class SettingsViewModel : ViewModel() {
             System.setErr(printStream)
 
             while (true) {
+                // Without this the captured stdout/stderr grows unbounded. Roll the
+                // buffer over once it gets large and only surface the recent tail.
+                if (byteArrayOutputStream.size() > MAX_LOG_BYTES) {
+                    byteArrayOutputStream.reset()
+                }
                 val output = byteArrayOutputStream.toString()
                 if (output.isNotEmpty()) {
-                    _state.update { it.copy(logSink = output) }
+                    _state.update { it.copy(logSink = output.takeLast(MAX_LOG_CHARS)) }
                 }
                 delay(500)
             }
-        }
-    }
-
-    private fun checkForNetCoreRuntime() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val isRuntimeAvailable = HardwareMonitorProcessManager.checkRuntime()
-            _state.update { it.copy(isRuntimeAvailable = isRuntimeAvailable) }
         }
     }
 
@@ -165,7 +168,10 @@ class SettingsViewModel : ViewModel() {
                 .collectLatest { state ->
                     when {
                         state.isRecording && state.hardwareData != null -> {
-                            dataHistory.add(state.hardwareData)
+                            // Bound the buffer so a long recording cannot grow without limit.
+                            if (dataHistory.size < MAX_RECORDING_FRAMES) {
+                                dataHistory.add(state.hardwareData)
+                            }
                             return@collectLatest
                         }
 
@@ -206,8 +212,11 @@ class SettingsViewModel : ViewModel() {
             is SettingsEvent.OverlayCustomPositionEnable -> onOverlayCustomPositionEnable(event.isEnabled, this)
             is SettingsEvent.OverlayOrientationSelect -> onOverlayOrientationSelect(event.isHorizontal, this)
             is SettingsEvent.OverlayOpacityChange -> onOverlayOpacityChange(event.opacity, this)
+            is SettingsEvent.OverlayFontScaleChange -> onOverlayFontScaleChange(event.fontScale, this)
             is SettingsEvent.OverlayGraphChange -> onOverlayGraphChange(event.progressType, this)
             is SettingsEvent.DarkThemeToggle -> onDarkModeToggle(event.isEnabled, this)
+            is SettingsEvent.ShowOnlyOnGameToggle -> onShowOnlyOnGameToggle(event.isEnabled, this)
+            is SettingsEvent.ShowFrameLowsToggle -> onShowFrameLowsToggle(event.isEnabled, this)
             is SettingsEvent.FpsApplicationSelect -> onFpsApplicationSelect(event.applicationName, this)
             is SettingsEvent.BoundarySet -> onBoundarySet(event.sensorType, event.boundaries, this)
             is SettingsEvent.ConsentGiven -> onConsentGiven()
@@ -336,6 +345,20 @@ class SettingsViewModel : ViewModel() {
         }
     }
 
+    private fun onShowOnlyOnGameToggle(enabled: Boolean, settingsState: SettingsState) {
+        with(settingsState) {
+            val newSettings = overlaySettings?.copy(showOnlyOnGame = enabled)
+            OverlaySettingsRepository.setOverlaySettings(newSettings)
+        }
+    }
+
+    private fun onShowFrameLowsToggle(enabled: Boolean, settingsState: SettingsState) {
+        with(settingsState) {
+            val newSettings = overlaySettings?.copy(showFrameLows = enabled)
+            OverlaySettingsRepository.setOverlaySettings(newSettings)
+        }
+    }
+
     private fun onOverlayGraphChange(progressType: OverlaySettings.ProgressType, settingsState: SettingsState) {
         with(settingsState) {
             val newSettings = overlaySettings?.copy(
@@ -350,6 +373,16 @@ class SettingsViewModel : ViewModel() {
         with(settingsState) {
             val newSettings = overlaySettings?.copy(
                 opacity = opacity,
+            )
+
+            OverlaySettingsRepository.setOverlaySettings(newSettings)
+        }
+    }
+
+    private fun onOverlayFontScaleChange(fontScale: Float, settingsState: SettingsState) {
+        with(settingsState) {
+            val newSettings = overlaySettings?.copy(
+                fontScale = fontScale,
             )
 
             OverlaySettingsRepository.setOverlaySettings(newSettings)

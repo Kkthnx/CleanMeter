@@ -3,9 +3,12 @@ package app.cleanmeter.target.desktop.ui.overlay
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import app.cleanmeter.core.common.hardwaremonitor.HardwareMonitorData
 import app.cleanmeter.target.desktop.model.OverlaySettings
 import app.cleanmeter.target.desktop.ui.AppTheme
@@ -46,10 +49,14 @@ fun Overlay(
         }
         else -> Alignment.Center
     }
+    val density = LocalDensity.current
+    val scaledDensity = Density(density.density * overlaySettings.fontScale, density.fontScale)
     Box(modifier = Modifier.fillMaxSize().alpha(overlaySettings.opacity), contentAlignment = alignment) {
-        OverlayUi(
-            data = data,
-            overlaySettings = overlaySettings
-        )
+        CompositionLocalProvider(LocalDensity provides scaledDensity) {
+            OverlayUi(
+                data = data,
+                overlaySettings = overlaySettings
+            )
+        }
     }
 }

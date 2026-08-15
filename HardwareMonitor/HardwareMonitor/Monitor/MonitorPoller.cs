@@ -52,7 +52,6 @@ public class MonitorPoller(
 
         using var memoryStream = new MemoryStream();
         using var writer = new BinaryWriter(memoryStream);
-        var accumulator = 0;
 
         WriteDataToStream(writer, sharedMemoryData);
 
@@ -78,6 +77,7 @@ public class MonitorPoller(
                 }
             }
 
+            _presentMonPoller.UpdateAggregates();
             WriteDataToStream(writer, sharedMemoryData);
 
             if (_socketHost.HasConnections())
@@ -88,13 +88,6 @@ public class MonitorPoller(
                 //logger.LogInformation("No clients connected, not sending data");
             }
 
-            if (accumulator >= 1000)
-            {
-                GC.Collect();
-                accumulator = 0;
-            }
-
-            accumulator += 500;
             await Task.Delay(_pollingRate, stoppingToken);
         }
 
@@ -235,6 +228,9 @@ public class MonitorPoller(
         sensorList.Add(MapSensor(_presentMonPoller.Displayed));
         sensorList.Add(MapSensor(_presentMonPoller.Presented));
         sensorList.Add(MapSensor(_presentMonPoller.Frametime));
+        sensorList.Add(MapSensor(_presentMonPoller.FpsAverage));
+        sensorList.Add(MapSensor(_presentMonPoller.Fps1PercentLow));
+        sensorList.Add(MapSensor(_presentMonPoller.Fps01PercentLow));
 
         sharedMemoryData.Sensors = sensorList;
         sharedMemoryData.Hardwares = hardwareList;

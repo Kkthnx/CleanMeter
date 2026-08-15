@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -26,9 +27,12 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.cleanmeter.core.common.hardwaremonitor.FPS
+import app.cleanmeter.core.common.hardwaremonitor.FPS1PercentLow
+import app.cleanmeter.core.common.hardwaremonitor.FPS01PercentLow
 import app.cleanmeter.core.common.hardwaremonitor.Frametime
 import app.cleanmeter.core.common.hardwaremonitor.HardwareMonitorData
 import app.cleanmeter.core.designsystem.LocalColorScheme
@@ -52,8 +56,14 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                         fontSize = 16.sp,
                         lineHeight = 0.sp,
                         fontWeight = FontWeight.Normal,
-                        modifier = Modifier.width(50.dp)
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.widthIn(min = 50.dp)
                     )
+                }
+
+                if (overlaySettings.showFrameLows && overlaySettings.sensors.framerate.isEnabled) {
+                    FrameLows(data)
                 }
 
                 if (overlaySettings.sensors.frametime.isEnabled) {
@@ -64,7 +74,9 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                         fontSize = 12.sp,
                         lineHeight = 0.sp,
                         fontWeight = FontWeight.Normal,
-                        modifier = Modifier.width(50.dp).padding(bottom = 2.dp)
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.widthIn(min = 50.dp).padding(bottom = 2.dp)
                     )
                 }
             }
@@ -91,7 +103,13 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                         letterSpacing = 1.sp
                     )
 
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(
+                        modifier = Modifier.conditional(
+                            predicate = overlaySettings.sensors.frametime.isEnabled,
+                            ifTrue = { fillMaxWidth() },
+                        ),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         if (overlaySettings.sensors.framerate.isEnabled) {
                             Text(
                                 text = "${data.FPS}",
@@ -99,7 +117,10 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                                 fontSize = 16.sp,
                                 lineHeight = 0.sp,
                                 fontWeight = FontWeight.Normal,
-                                modifier = Modifier.width(50.dp)
+                                textAlign = TextAlign.End,
+                                maxLines = 1,
+                                softWrap = false,
+                                modifier = Modifier.widthIn(min = 50.dp)
                             )
                         }
 
@@ -110,10 +131,16 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                                 fontSize = 12.sp,
                                 lineHeight = 0.sp,
                                 fontWeight = FontWeight.Normal,
-                                modifier = Modifier.width(50.dp)
+                                maxLines = 1,
+                                softWrap = false,
+                                modifier = Modifier.widthIn(min = 50.dp)
                             )
                         }
                     }
+                }
+
+                if (overlaySettings.showFrameLows && overlaySettings.sensors.framerate.isEnabled) {
+                    FrameLows(data)
                 }
 
                 if (overlaySettings.sensors.frametime.isEnabled) {
@@ -121,6 +148,34 @@ internal fun FpsSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun FrameLows(data: HardwareMonitorData) {
+    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        LowReading(label = "1%", value = data.FPS1PercentLow)
+        LowReading(label = ".1%", value = data.FPS01PercentLow)
+    }
+}
+
+@Composable
+private fun LowReading(label: String, value: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.5f),
+            fontSize = 8.sp,
+            lineHeight = 0.sp,
+            fontWeight = FontWeight.Normal,
+        )
+        Text(
+            text = "$value",
+            color = Color.White,
+            fontSize = 11.sp,
+            lineHeight = 0.sp,
+            fontWeight = FontWeight.Normal,
+        )
     }
 }
 
@@ -143,7 +198,10 @@ private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
         if (data.Frametime > largestFrametime.floatValue) {
             largestFrametime.floatValue = data.Frametime
         }
-        frametimePoints.add(1f - (data.Frametime / largestFrametime.floatValue))
+        val largest = largestFrametime.floatValue
+        // Plot frametime as a fraction of the largest seen so a stutter spike
+        // grows up from the bottom, matching the network graph.
+        frametimePoints.add(if (largest > 0f) data.Frametime / largest else 0f)
         if (frametimePoints.size > listSize) frametimePoints.removeFirst()
     }
 

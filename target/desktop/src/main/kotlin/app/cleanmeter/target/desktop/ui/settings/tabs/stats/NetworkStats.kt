@@ -32,6 +32,7 @@ internal fun NetworkStats(
             SensorType.NetGraph,
         ),
         onSwitchToggle = { onSectionSwitchToggle(SectionType.Network, it) },
+        tooltip = "Upload and download speed for the selected network adapter.",
         body = { options ->
             Column(modifier = Modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 options.forEach { option ->

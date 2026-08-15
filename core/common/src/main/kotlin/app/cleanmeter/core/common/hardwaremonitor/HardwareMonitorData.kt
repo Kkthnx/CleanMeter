@@ -9,6 +9,14 @@ data class HardwareMonitorData(
     val Sensors: List<Sensor>,
     val PresentMonApps: List<String>,
 ) {
+    // Built once per data frame so the overlay's many per-frame reads are O(1)
+    // lookups instead of a linear scan over every sensor each time. Keeps the
+    // first sensor for a given identifier to match the old firstOrNull lookup,
+    // since some identifiers (e.g. a couple of GPU load sensors) are not unique.
+    val sensorsByIdentifier: Map<String, Sensor> by lazy {
+        buildMap { for (sensor in Sensors) putIfAbsent(sensor.Identifier, sensor) }
+    }
+
     @Serializable
     data class Hardware(
         val Name: String,
@@ -81,11 +89,22 @@ fun HardwareMonitorData.readings(namePart: String): List<HardwareMonitorData.Sen
     return Sensors.filter { it.Identifier.contains(namePart, true) || it.Name.contains(namePart, true) }
         .sortedBy { it.SensorType }
 }
-fun HardwareMonitorData.getReading(identifier: String) = Sensors.firstOrNull { it.Identifier == identifier }
+fun HardwareMonitorData.getReading(identifier: String) = sensorsByIdentifier[identifier]
 fun HardwareMonitorData.getReading(identifier: String, namePart: String) = Sensors.firstOrNull { it.Identifier == identifier && it.Name.contains(namePart, true) }
 
 val HardwareMonitorData.FPS: Int
     get() = (1000f / (getReading("/presentmon/frametime")?.Value ?: 1f)).toInt()
+
+// Computed in the backend from every frame, so these are real percentiles and
+// not something the sampled overlay could derive on its own.
+val HardwareMonitorData.FPSAverage: Int
+    get() = (getReading("/presentmon/fps_average")?.Value ?: 0f).toInt()
+
+val HardwareMonitorData.FPS1PercentLow: Int
+    get() = (getReading("/presentmon/fps_1_low")?.Value ?: 0f).toInt()
+
+val HardwareMonitorData.FPS01PercentLow: Int
+    get() = (getReading("/presentmon/fps_01_low")?.Value ?: 0f).toInt()
 
 val HardwareMonitorData.Frametime: Float
     get() = (getReading("/presentmon/frametime")?.Value ?: 0f).coerceAtLeast(0f)

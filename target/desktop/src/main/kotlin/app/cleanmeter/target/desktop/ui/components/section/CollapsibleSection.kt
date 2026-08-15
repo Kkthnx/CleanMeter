@@ -27,6 +27,7 @@ import app.cleanmeter.target.desktop.ui.components.SectionTitle
 @Composable
 fun CollapsibleSection(
     title: String,
+    tooltip: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -43,7 +44,7 @@ fun CollapsibleSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SectionTitle(title = title)
+            SectionTitle(title = title, tooltip = tooltip)
             IconButton(onClick = { expanded = !expanded }, modifier = Modifier.clearAndSetSemantics { }.height(20.dp)) {
                 Icon(
                     imageVector = Icons.Rounded.ChevronRight,

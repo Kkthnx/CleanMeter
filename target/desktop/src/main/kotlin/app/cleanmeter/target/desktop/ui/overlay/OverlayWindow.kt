@@ -23,6 +23,7 @@ import app.cleanmeter.core.os.win32.WindowsService
 import app.cleanmeter.target.desktop.ApplicationViewModelStoreOwner
 import app.cleanmeter.target.desktop.KeyboardEvent
 import app.cleanmeter.target.desktop.KeyboardManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import java.awt.GraphicsEnvironment
 import java.awt.Toolkit
@@ -54,8 +55,20 @@ fun ApplicationScope.OverlayWindow(
         }
     }
 
+    // PresentMon also captures our own overlay window, so ignore our own process
+    // when deciding if a game is running. command() can be empty on some JVMs, so
+    // always fall back to the shipped executable name as well.
+    val ignoredApps = remember {
+        val ownName = ProcessHandle.current().info().command().orElse("").substringAfterLast('\\').lowercase()
+        setOf("auto", "cleanmeter.exe", ownName).filter { it.isNotBlank() }.toSet()
+    }
+    val isGaming = overlayState.hardwareData?.PresentMonApps.orEmpty()
+        .any { it.lowercase() !in ignoredApps }
+    val showOnlyOnGame = overlayState.overlaySettings!!.showOnlyOnGame
+
+    val fontScale = overlayState.overlaySettings!!.fontScale
     val overlayWindowState = rememberWindowState().apply {
-        size = if (overlayState.overlaySettings!!.isHorizontal) DpSize(1280.dp, 80.dp) else DpSize(350.dp, 1280.dp)
+        size = if (overlayState.overlaySettings!!.isHorizontal) DpSize(1280.dp * fontScale, 80.dp * fontScale) else DpSize(350.dp * fontScale, 1280.dp * fontScale)
         placement = WindowPlacement.Floating
     }
 
@@ -67,7 +80,7 @@ fun ApplicationScope.OverlayWindow(
     Window(
         state = overlayWindowState,
         onCloseRequest = { exitApplication() },
-        visible = isVisible,
+        visible = isVisible && (!showOnlyOnGame || isGaming),
         title = "Clean Meter",
         resizable = false,
         alwaysOnTop = true,
@@ -129,6 +142,16 @@ fun ApplicationScope.OverlayWindow(
         }
 
         WindowsService.changeWindowTransparency(window, overlayState.overlaySettings!!.isPositionLocked)
+
+        // Keep the overlay above games that push other top-most windows down when
+        // they go fullscreen. Only runs while the overlay is actually shown.
+        val overlayVisible = isVisible && (!showOnlyOnGame || isGaming)
+        LaunchedEffect(overlayVisible) {
+            while (overlayVisible) {
+                WindowsService.reassertTopmost(window)
+                delay(1500)
+            }
+        }
 
         WindowDraggableArea {
             Overlay(
