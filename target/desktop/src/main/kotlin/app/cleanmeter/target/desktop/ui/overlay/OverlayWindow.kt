@@ -23,6 +23,7 @@ import app.cleanmeter.core.os.win32.WindowsService
 import app.cleanmeter.target.desktop.ApplicationViewModelStoreOwner
 import app.cleanmeter.target.desktop.KeyboardEvent
 import app.cleanmeter.target.desktop.KeyboardManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import java.awt.GraphicsEnvironment
 import java.awt.Toolkit
@@ -141,6 +142,16 @@ fun ApplicationScope.OverlayWindow(
         }
 
         WindowsService.changeWindowTransparency(window, overlayState.overlaySettings!!.isPositionLocked)
+
+        // Keep the overlay above games that push other top-most windows down when
+        // they go fullscreen. Only runs while the overlay is actually shown.
+        val overlayVisible = isVisible && (!showOnlyOnGame || isGaming)
+        LaunchedEffect(overlayVisible) {
+            while (overlayVisible) {
+                WindowsService.reassertTopmost(window)
+                delay(1500)
+            }
+        }
 
         WindowDraggableArea {
             Overlay(
