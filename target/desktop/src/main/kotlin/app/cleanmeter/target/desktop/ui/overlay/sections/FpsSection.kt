@@ -161,7 +161,9 @@ private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
             largestFrametime.floatValue = data.Frametime
         }
         val largest = largestFrametime.floatValue
-        frametimePoints.add(if (largest > 0f) 1f - (data.Frametime / largest) else 0f)
+        // Plot frametime as a fraction of the largest seen so a stutter spike
+        // grows up from the bottom, matching the network graph.
+        frametimePoints.add(if (largest > 0f) data.Frametime / largest else 0f)
         if (frametimePoints.size > listSize) frametimePoints.removeFirst()
     }
 
