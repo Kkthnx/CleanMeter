@@ -16,6 +16,7 @@ internal fun RamStats(
         title = "RAM",
         options = availableOptions.filterOptions(SensorType.RamUsage),
         onOptionToggle = onOptionsToggle,
-        onSwitchToggle = { onSectionSwitchToggle(SectionType.Ram, it) }
+        onSwitchToggle = { onSectionSwitchToggle(SectionType.Ram, it) },
+        tooltip = "How much system memory is in use.",
     )
 }

@@ -31,6 +31,7 @@ internal fun CpuStats(
         title = "CPU",
         options = availableOptions.filterOptions(SensorType.CpuUsage, SensorType.CpuTemp, SensorType.CpuConsumption),
         onSwitchToggle = { onSectionSwitchToggle(SectionType.Cpu, it) },
+        tooltip = "Processor temperature, usage and power draw. Use the Sensor dropdowns to choose which reading each shows.",
         body = { options ->
             Column(modifier = Modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 options.forEach { option ->

@@ -26,7 +26,10 @@ internal fun Opacity(
     overlaySettings: OverlaySettings,
     onOpacityChange: (Float) -> Unit
 ) {
-    CollapsibleSection(title = "OPACITY") {
+    CollapsibleSection(
+        title = "OPACITY",
+        tooltip = "How see-through the overlay is. Lower for a subtler overlay, higher to make it stand out.",
+    ) {
         Column {
             val inactiveTrackColor = LocalColorScheme.current.background.surfaceSunkenSubtle
             val activeTrackColor = LocalColorScheme.current.background.brand

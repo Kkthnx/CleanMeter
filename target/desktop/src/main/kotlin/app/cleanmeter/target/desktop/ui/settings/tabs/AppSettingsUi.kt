@@ -41,7 +41,10 @@ fun AppSettingsUi(
     modifier = Modifier.fillMaxSize().padding(top = 20.dp).verticalScroll(rememberScrollState()),
     verticalArrangement = Arrangement.spacedBy(16.dp)
 ) {
-    Section(title = "GENERAL") {
+    Section(
+        title = "GENERAL",
+        tooltip = "How CleanMeter starts up and runs in the background.",
+    ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -54,7 +57,10 @@ fun AppSettingsUi(
         }
     }
 
-    Section(title = "APPEARANCE") {
+    Section(
+        title = "APPEARANCE",
+        tooltip = "Light or dark theme for this settings window.",
+    ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -101,7 +107,10 @@ fun AppSettingsUi(
         }
     }
 
-    Section(title = "RECORDING") {
+    Section(
+        title = "PERFORMANCE",
+        tooltip = "How often the overlay refreshes its data. Faster updates look smoother but use more CPU.",
+    ) {
         val options = listOf("33", "50", "100", "250", "300", "350", "400", "500")
         DropdownMenu(
             label = "Polling Rate:",

@@ -25,6 +25,7 @@ internal fun FpsStats(
         title = "FPS",
         options = availableOptions.filterOptions(SensorType.Framerate, SensorType.Frametime),
         onSwitchToggle = { onSectionSwitchToggle(SectionType.Fps, it) },
+        tooltip = "Frame rate and frame time for the app being monitored. Pick which app under Monitored app.",
         body = { options ->
             Column(modifier = Modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 options.forEach { option ->

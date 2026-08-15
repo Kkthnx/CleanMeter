@@ -41,7 +41,10 @@ internal fun Position(
     onOverlayCustomPositionEnable: (Boolean) -> Unit,
     getOverlayPosition: () -> IntOffset
 ) {
-    CollapsibleSection(title = "POSITION") {
+    CollapsibleSection(
+        title = "POSITION",
+        tooltip = "Where the overlay sits on screen. Pick a preset corner or drag it to a custom spot.",
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)

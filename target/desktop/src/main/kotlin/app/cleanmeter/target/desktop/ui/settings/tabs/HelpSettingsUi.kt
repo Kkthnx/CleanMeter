@@ -75,7 +75,10 @@ internal fun HelpSettingsUi(
             title = "CURRENT LIMITATIONS",
         ) {
             BulletList(
-                listOf("Doesn't work with exclusive fullscreen")
+                listOf(
+                    "Exclusive fullscreen hides the overlay. Set the game to Borderless or Windowed and the overlay will show over it, with no real performance cost.",
+                    "Anti-cheat protected games may block the overlay. That is expected and keeps you safe from bans, since drawing inside those games is not allowed.",
+                )
             )
         }
 

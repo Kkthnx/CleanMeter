@@ -15,6 +15,7 @@ fun ToggleSection(
     title: String,
     isEnabled: Boolean,
     onSwitchToggle: (Boolean) -> Unit,
+    tooltip: String? = null,
     content: @Composable () -> Unit
 ) = SectionBody {
     Row(
@@ -22,7 +23,7 @@ fun ToggleSection(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SectionTitle(title = title.uppercase())
+        SectionTitle(title = title.uppercase(), tooltip = tooltip)
         Toggle(
             checked = isEnabled,
             onCheckedChange = onSwitchToggle

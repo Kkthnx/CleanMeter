@@ -23,7 +23,8 @@ internal fun GraphType(
         isEnabled = overlaySettings.progressType != OverlaySettings.ProgressType.None,
         onSwitchToggle = {
             onGraphTypeChange(if (!it) OverlaySettings.ProgressType.None else OverlaySettings.ProgressType.Circular)
-        }
+        },
+        tooltip = "How each reading's level is drawn: a circular ring or a bar. Turn off to show numbers only.",
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),

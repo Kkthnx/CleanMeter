@@ -29,7 +29,10 @@ internal fun FontSize(
     overlaySettings: OverlaySettings,
     onFontScaleChange: (Float) -> Unit
 ) {
-    CollapsibleSection(title = "FONT SIZE") {
+    CollapsibleSection(
+        title = "FONT SIZE",
+        tooltip = "Scale the whole overlay up or down. Larger is easier to read from across the room.",
+    ) {
         Column {
             val inactiveTrackColor = LocalColorScheme.current.background.surfaceSunkenSubtle
             val activeTrackColor = LocalColorScheme.current.background.brand

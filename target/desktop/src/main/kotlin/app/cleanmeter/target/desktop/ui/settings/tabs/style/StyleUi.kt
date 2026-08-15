@@ -64,6 +64,7 @@ fun StyleUi(
         title = "MONITOR",
         options = screenDevices.map { it.defaultConfiguration.device.iDstring },
         selectedIndex = overlaySettings.selectedDisplayIndex,
-        onValueChanged = { onDisplaySelect(it) }
+        onValueChanged = { onDisplaySelect(it) },
+        tooltip = "Which display the overlay appears on when you have more than one monitor.",
     )
 }
