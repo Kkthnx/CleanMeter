@@ -54,12 +54,15 @@ fun ApplicationScope.OverlayWindow(
         }
     }
 
-    // PresentMon also captures our own overlay window, so ignore our process when deciding if a game is running
-    val ownProcessName = remember {
-        ProcessHandle.current().info().command().orElse("").substringAfterLast('\\').lowercase()
+    // PresentMon also captures our own overlay window, so ignore our own process
+    // when deciding if a game is running. command() can be empty on some JVMs, so
+    // always fall back to the shipped executable name as well.
+    val ignoredApps = remember {
+        val ownName = ProcessHandle.current().info().command().orElse("").substringAfterLast('\\').lowercase()
+        setOf("auto", "cleanmeter.exe", ownName).filter { it.isNotBlank() }.toSet()
     }
     val isGaming = overlayState.hardwareData?.PresentMonApps.orEmpty()
-        .any { it != "Auto" && it.lowercase() != ownProcessName }
+        .any { it.lowercase() !in ignoredApps }
     val showOnlyOnGame = overlayState.overlaySettings!!.showOnlyOnGame
 
     val fontScale = overlayState.overlaySettings!!.fontScale
