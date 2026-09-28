@@ -84,41 +84,62 @@ public class PresentMonPoller(ILogger logger)
         _process.Kill(true);
     }
 
+    // Highest column index this method reads (parts[17], Displayed).
+    private const int MinExpectedColumns = 18;
+
     private void ParseData(string? argsData)
     {
-        string[] parts;
-        if (argsData != null)
+        if (argsData == null) return;
+
+        try
         {
-            parts = argsData.Split(",");
-            CurrentApps.Add(parts[0]);
+            ParseDataUnsafe(argsData);
+        }
+        catch (Exception ex)
+        {
+            // PresentMon's output is an external process's stdout: a short,
+            // malformed or header-only line reaching here is expected
+            // occasionally. This ran on the process's OutputDataReceived
+            // callback, where an unhandled exception is fatal to the whole
+            // backend rather than just this line, so one bad line must not
+            // be allowed to take the service down.
+            logger.LogWarning(ex, "Failed to parse a PresentMon output line, skipping it");
+        }
+    }
 
-            if (_currentSelectedApp != NO_SELECTED_APP && _currentSelectedApp != parts[0])
-            {
-                return;
-            }
+    private void ParseDataUnsafe(string argsData)
+    {
+        var parts = argsData.Split(",");
+        if (parts.Length < MinExpectedColumns) return;
 
-            if (float.TryParse(parts[9], NumberStyles.Any, _cultureInfo, out var frametime))
+        CurrentApps.Add(parts[0]);
+
+        if (_currentSelectedApp != NO_SELECTED_APP && _currentSelectedApp != parts[0])
+        {
+            return;
+        }
+
+        if (float.TryParse(parts[9], NumberStyles.Any, _cultureInfo, out var frametime))
+        {
+            Frametime.Value = frametime;
+            if (frametime > 0f)
             {
-                Frametime.Value = frametime;
-                if (frametime > 0f)
+                lock (_frametimeLock)
                 {
-                    lock (_frametimeLock)
-                    {
-                        _frametimes.Enqueue(frametime);
-                        while (_frametimes.Count > FrametimeWindow) _frametimes.Dequeue();
-                    }
+                    _frametimes.Enqueue(frametime);
+                    while (_frametimes.Count > FrametimeWindow) _frametimes.Dequeue();
                 }
             }
+        }
 
-            if (float.TryParse(parts[13], NumberStyles.Any, _cultureInfo, out var gpuTime))
-            {
-                Presented.Value = gpuTime;
-            }
+        if (float.TryParse(parts[13], NumberStyles.Any, _cultureInfo, out var gpuTime))
+        {
+            Presented.Value = gpuTime;
+        }
 
-            if (float.TryParse(parts[17], NumberStyles.Any, _cultureInfo, out var displayed))
-            {
-                Displayed.Value = displayed;
-            }
+        if (float.TryParse(parts[17], NumberStyles.Any, _cultureInfo, out var displayed))
+        {
+            Displayed.Value = displayed;
         }
     }
 
