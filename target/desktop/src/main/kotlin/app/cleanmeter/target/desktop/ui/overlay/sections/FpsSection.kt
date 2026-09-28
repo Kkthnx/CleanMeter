@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -181,8 +180,9 @@ private fun LowReading(label: String, value: Int) {
 
 @Composable
 private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
-    val largestFrametime = remember { mutableFloatStateOf(0f) }
     val listSize = 30
+    // Raw frametime values, not pre-normalized, so the scale can be
+    // recomputed fresh from whatever is currently in the window.
     val frametimePoints = remember { mutableStateListOf<Float>() }
 
     val frametimePaint = remember {
@@ -195,13 +195,7 @@ private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
     }
 
     LaunchedEffect(data) {
-        if (data.Frametime > largestFrametime.floatValue) {
-            largestFrametime.floatValue = data.Frametime
-        }
-        val largest = largestFrametime.floatValue
-        // Plot frametime as a fraction of the largest seen so a stutter spike
-        // grows up from the bottom, matching the network graph.
-        frametimePoints.add(if (largest > 0f) data.Frametime / largest else 0f)
+        frametimePoints.add(data.Frametime)
         if (frametimePoints.size > listSize) frametimePoints.removeFirst()
     }
 
@@ -214,7 +208,11 @@ private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
         .graphicsLayer { alpha = 0.99f }
         .drawWithContent {
             val colors = listOf(Color.Transparent, Color.Black, Color.Black, Color.Black, Color.Transparent)
-            val frametimeZip = frametimePoints.zipWithNext()
+            // The scale is the max of the window currently on screen, not an
+            // all-time high, so one old stutter spike does not flatten the
+            // graph forever once it has scrolled out of view.
+            val largest = frametimePoints.maxOrNull()?.takeIf { it > 0f } ?: 1f
+            val frametimeZip = frametimePoints.map { it / largest }.zipWithNext()
 
             drawIntoCanvas { canvas ->
                 drawLine(frametimeZip, listSize, canvas, frametimePaint)

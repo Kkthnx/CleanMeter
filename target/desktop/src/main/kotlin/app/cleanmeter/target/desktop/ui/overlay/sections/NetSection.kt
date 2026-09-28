@@ -14,7 +14,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -139,9 +138,9 @@ internal fun NetSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
 private fun NetGraph(data: HardwareMonitorData, isHorizontal: Boolean, overlaySettings: OverlaySettings) {
     if (!overlaySettings.sensors.upRate.isEnabled && !overlaySettings.sensors.downRate.isEnabled) return
 
-    val largestUp = remember { mutableFloatStateOf(0f) }
-    val largestDown = remember { mutableFloatStateOf(0f) }
     val listSize = 30
+    // Raw rates, not pre-normalized, so the scale is recomputed fresh from
+    // whichever window is currently on screen at draw time.
     val upRatePoints = remember { mutableStateListOf<Float>() }
     val downRatePoints = remember { mutableStateListOf<Float>() }
 
@@ -166,12 +165,10 @@ private fun NetGraph(data: HardwareMonitorData, isHorizontal: Boolean, overlaySe
         val dlRate = data.getReading(overlaySettings.sensors.downRate.customReadingId)?.Value ?: 0f
         val upRate = data.getReading(overlaySettings.sensors.upRate.customReadingId)?.Value ?: 0f
 
-        upRatePoints.add((upRate / largestUp.floatValue.coerceAtLeast(1f)).coerceIn(0f, 1f))
-        downRatePoints.add((dlRate / largestDown.floatValue.coerceAtLeast(1f) + .2f).coerceIn(0f, 1f))
+        upRatePoints.add(upRate)
+        downRatePoints.add(dlRate)
         if (upRatePoints.size > listSize) upRatePoints.removeFirst()
         if (downRatePoints.size > listSize) downRatePoints.removeFirst()
-        largestUp.floatValue = upRatePoints.max()
-        largestDown.floatValue = downRatePoints.max() + .2f
     }
 
     Box(modifier = Modifier
@@ -184,8 +181,15 @@ private fun NetGraph(data: HardwareMonitorData, isHorizontal: Boolean, overlaySe
         .graphicsLayer { alpha = 0.99f }
         .drawWithContent {
             val colors = listOf(Color.Transparent, Color.Black, Color.Black, Color.Black, Color.Transparent)
-            val upRateZip = upRatePoints.zipWithNext()
-            val downRateZip = downRatePoints.zipWithNext()
+            // Each line scales to the larger of its own window and the
+            // other's, so one direction maxing out does not make the other
+            // look artificially busier than it is.
+            val largest = maxOf(
+                upRatePoints.maxOrNull() ?: 0f,
+                downRatePoints.maxOrNull() ?: 0f,
+            ).coerceAtLeast(1f)
+            val upRateZip = upRatePoints.map { (it / largest).coerceIn(0f, 1f) }.zipWithNext()
+            val downRateZip = downRatePoints.map { (it / largest + .2f).coerceIn(0f, 1f) }.zipWithNext()
 
             drawIntoCanvas { canvas ->
                 if (overlaySettings.sensors.upRate.isEnabled) {
