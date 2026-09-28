@@ -17,6 +17,12 @@ data class HardwareMonitorData(
         buildMap { for (sensor in Sensors) putIfAbsent(sensor.Identifier, sensor) }
     }
 
+    // Same idea for the handful of lookups that key by sensor name instead of
+    // identifier (RAM usage below).
+    val sensorsByName: Map<String, Sensor> by lazy {
+        buildMap { for (sensor in Sensors) putIfAbsent(sensor.Name, sensor) }
+    }
+
     @Serializable
     data class Hardware(
         val Name: String,
@@ -110,7 +116,7 @@ val HardwareMonitorData.Frametime: Float
     get() = (getReading("/presentmon/frametime")?.Value ?: 0f).coerceAtLeast(0f)
 
 val HardwareMonitorData.RamUsage: Float
-    get() = Sensors.firstOrNull { it.Name == "Memory Used" }?.Value?.coerceAtLeast(1f) ?: 1f
+    get() = sensorsByName["Memory Used"]?.Value?.coerceAtLeast(1f) ?: 1f
 
 val HardwareMonitorData.RamUsagePercent: Float
-    get() = RamUsage / (RamUsage + (Sensors.firstOrNull { it.Name == "Memory Available" }?.Value?.coerceAtLeast(1f) ?: 1f))
+    get() = RamUsage / (RamUsage + (sensorsByName["Memory Available"]?.Value?.coerceAtLeast(1f) ?: 1f))

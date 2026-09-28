@@ -13,9 +13,15 @@ var builder = Host.CreateDefaultBuilder(args)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
         .WriteTo.File(
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LogFiles",
-                $"{DateTime.Now.Year}-{DateTime.Now.Month}-{DateTime.Now.Day}", "Log.txt"),
-            rollingInterval: RollingInterval.Infinite,
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "LogFiles", "Log.txt"),
+            // A new dated file each day, letting Serilog manage naming and
+            // pruning itself. The previous setup built its own dated folder
+            // per day and rolled nothing (Infinite), so Serilog never
+            // recognized those files as related and never cleaned any of
+            // them up: after months of use that is one folder per day,
+            // forever, on a service meant to run continuously.
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 14,
             outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{Level}] {Message}{NewLine}{Exception}")
         .WriteTo.Console()
     );
