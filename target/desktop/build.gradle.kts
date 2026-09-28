@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import java.time.Year
 
 val copyPresentMon = tasks.register<Copy>("copyPresentMon") {
     from("../../HardwareMonitor/HardwareMonitor/bin/Release/net8.0/win-x64/presentmon")
@@ -74,7 +75,7 @@ compose.desktop {
             packageVersion = projectVersion
             vendor = "Kkthnx"
             description = "Lightweight hardware monitor overlay for gaming"
-            copyright = "Copyright © ${java.time.Year.now()} Kkthnx"
+            copyright = "Copyright (c) ${Year.now()} Kkthnx"
             licenseFile.set(project.file("../../LICENSE"))
 
             includeAllModules = true
