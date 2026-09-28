@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using HardwareMonitor.PresentMon;
 using HardwareMonitor.SharedMemory;
 using HardwareMonitor.Sockets;
+using HardwareMonitor.Status;
 using LibreHardwareMonitor.Hardware;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -32,6 +33,8 @@ public class MonitorPoller(
 
     private PipeHost _socketHost = new(logger);
     private readonly PresentMonPoller _presentMonPoller = new(logger);
+    private readonly IHardware _systemHardware = new SystemHardware();
+    private SystemSensor _pawnIoMissingSensor = null!; // set at the start of ExecuteAsync
 
     private short _pollingRate = 500;
     private const short MinimalPollingRate = 33;
@@ -39,6 +42,17 @@ public class MonitorPoller(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation("Starting monitor");
+
+        _pawnIoMissingSensor = new SystemSensor(_systemHardware, "pawnio_missing", 0, "PawnIO Missing")
+        {
+            Value = DriverCheck.IsPawnIoInstalled() ? 0f : 1f
+        };
+        if (_pawnIoMissingSensor.Value == 1f)
+        {
+            logger.LogWarning(
+                "PawnIO is not installed. LibreHardwareMonitor 0.9.6+ needs it for CPU/motherboard " +
+                "sensors and will report 0 for them without it. Install it from https://pawnio.eu/");
+        }
 
         _computer.Open();
         _computer.Accept(new UpdateVisitor());
@@ -231,6 +245,7 @@ public class MonitorPoller(
         sensorList.Add(MapSensor(_presentMonPoller.FpsAverage));
         sensorList.Add(MapSensor(_presentMonPoller.Fps1PercentLow));
         sensorList.Add(MapSensor(_presentMonPoller.Fps01PercentLow));
+        sensorList.Add(MapSensor(_pawnIoMissingSensor));
 
         sharedMemoryData.Sensors = sensorList;
         sharedMemoryData.Hardwares = hardwareList;

@@ -37,6 +37,7 @@ import androidx.compose.ui.window.WindowScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.cleanmeter.core.common.hardwaremonitor.cpuReadings
 import app.cleanmeter.core.common.hardwaremonitor.gpuReadings
+import app.cleanmeter.core.common.hardwaremonitor.isPawnIoMissing
 import app.cleanmeter.core.common.hardwaremonitor.networkReadings
 import app.cleanmeter.core.designsystem.LocalColorScheme
 import app.cleanmeter.core.designsystem.LocalTypography
@@ -203,6 +204,7 @@ private fun TabContent(
             getNetworkSensorReadings = { settingsState.hardwareData?.networkReadings() ?: emptyList() },
             getHardwareSensors = { settingsState.hardwareData?.Hardwares ?: emptyList() },
             getPresentMonApps = { settingsState.hardwareData?.PresentMonApps ?: emptyList() },
+            isPawnIoMissing = settingsState.hardwareData?.isPawnIoMissing == true,
             onBoundaryChange = { sensorType, boundaries ->
                 viewModel.onEvent(SettingsEvent.BoundarySet(sensorType, boundaries))
             },
@@ -243,8 +245,8 @@ private fun TabContent(
             onFontScaleChange = { viewModel.onEvent(SettingsEvent.OverlayFontScaleChange(it)) },
             onGraphTypeChange = { viewModel.onEvent(SettingsEvent.OverlayGraphChange(it)) },
             onOverlayCustomPositionEnable = { viewModel.onEvent(SettingsEvent.OverlayCustomPositionEnable(it)) },
-            onDisplaySelect = {
-                viewModel.onEvent(SettingsEvent.DisplaySelect(it))
+            onDisplaySelect = { index, id ->
+                viewModel.onEvent(SettingsEvent.DisplaySelect(index, id))
             },
         )
 

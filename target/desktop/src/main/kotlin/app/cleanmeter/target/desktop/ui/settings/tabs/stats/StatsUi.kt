@@ -17,6 +17,7 @@ import app.cleanmeter.core.designsystem.LocalColorScheme
 import app.cleanmeter.core.designsystem.LocalTypography
 import app.cleanmeter.target.desktop.model.OverlaySettings
 import app.cleanmeter.target.desktop.ui.components.KeyboardShortcutInfoLabel
+import app.cleanmeter.target.desktop.ui.components.PawnIoNotice
 import app.cleanmeter.target.desktop.ui.components.section.DropdownSection
 import app.cleanmeter.target.desktop.ui.settings.CheckboxSectionOption
 import app.cleanmeter.target.desktop.ui.settings.SectionType
@@ -40,11 +41,16 @@ fun StatsUi(
     getPresentMonApps: () -> List<String>,
     onBoundaryChange: (SensorType, OverlaySettings.Sensor.GraphSensor.Boundaries) -> Unit,
     getSensor: (SensorType) -> OverlaySettings.Sensor,
+    isPawnIoMissing: Boolean = false,
 ) = Column(
     modifier = Modifier.padding(bottom = 8.dp, top = 20.dp).verticalScroll(rememberScrollState()),
     verticalArrangement = Arrangement.spacedBy(16.dp)
 ) {
     val availableOptions = remember(overlaySettings) { checkboxSectionOptions(overlaySettings) }
+
+    if (isPawnIoMissing) {
+        PawnIoNotice()
+    }
 
     KeyboardShortcutInfoLabel()
 

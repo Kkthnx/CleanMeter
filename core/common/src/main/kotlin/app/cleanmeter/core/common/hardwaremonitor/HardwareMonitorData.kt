@@ -106,6 +106,11 @@ val HardwareMonitorData.FPS: Int
 val HardwareMonitorData.FPSAverage: Int
     get() = (getReading("/presentmon/fps_average")?.Value ?: 0f).toInt()
 
+// True when the backend could not find the PawnIO driver LibreHardwareMonitor
+// 0.9.6+ needs for CPU/motherboard sensors, so those are known to be reading 0.
+val HardwareMonitorData.isPawnIoMissing: Boolean
+    get() = getReading("/system/pawnio_missing")?.Value == 1f
+
 val HardwareMonitorData.FPS1PercentLow: Int
     get() = (getReading("/presentmon/fps_1_low")?.Value ?: 0f).toInt()
 
