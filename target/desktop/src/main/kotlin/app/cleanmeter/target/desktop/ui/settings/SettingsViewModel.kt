@@ -152,7 +152,7 @@ class SettingsViewModel : ViewModel() {
     }
 
     private fun observeRecordingHotkey() {
-        CoroutineScope(Dispatchers.Default).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             KeyboardManager
                 .filter(KeyboardEvent.ToggleRecording)
                 .collectLatest {
@@ -163,7 +163,9 @@ class SettingsViewModel : ViewModel() {
     }
 
     private fun observeRecordingState() {
-        CoroutineScope(Dispatchers.Default).launch {
+        // File writes below are blocking, so this must run on IO rather than
+        // Default, which is meant for CPU-bound work and has a small thread pool.
+        CoroutineScope(Dispatchers.IO).launch {
             _state
                 .collectLatest { state ->
                     when {
