@@ -72,7 +72,11 @@ compose.desktop {
 
             packageName = "cleanmeter"
             packageVersion = projectVersion
-            
+            vendor = "Kkthnx"
+            description = "Lightweight hardware monitor overlay for gaming"
+            copyright = "Copyright © ${java.time.Year.now()} Kkthnx"
+            licenseFile.set(project.file("../../LICENSE"))
+
             includeAllModules = true
 
             windows {
