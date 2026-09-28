@@ -3,13 +3,13 @@
 <br />
 
 <p align="left">
-  <a href="https://github.com/Danil0v3s/CleanMeter/actions"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Danil0v3s/CleanMeter/build.yml?style=flat-square"></a>
+  <a href="https://github.com/Kkthnx/CleanMeter/actions"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/Kkthnx/CleanMeter/build.yml?style=flat-square"></a>
   &nbsp;
   <a href="https://discord.gg/phqwe89cvE"><img alt="Discord" src="https://img.shields.io/discord/1297574228698337405?label=Discord&color=7289da&style=flat-square" /></a>
   &nbsp;
-  <a href="https://github.com/Danil0v3s/CleanMeter/graphs/contributors"><img alt="npm" src="https://img.shields.io/github/contributors-anon/Danil0v3s/CleanMeter?color=yellow&style=flat-square"/></a>
+  <a href="https://github.com/Kkthnx/CleanMeter/graphs/contributors"><img alt="npm" src="https://img.shields.io/github/contributors-anon/Kkthnx/CleanMeter?color=yellow&style=flat-square"/></a>
   &nbsp;
-  <a href="https://github.com/Danil0v3s/CleanMeter/releases/latest"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/Danil0v3s/CleanMeter"></a>
+  <a href="https://github.com/Kkthnx/CleanMeter/releases/latest"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/Kkthnx/CleanMeter"></a>
 </p>
 <hr/>
 <h4>
@@ -18,7 +18,7 @@
 <hr/>
 
 > [!IMPORTANT]  
-> 🎉 <strong>We've released 1.0!</strong> Star this repo or keep an eye on it to follow along.
+> This fork is actively maintained. Star this repo or keep an eye on it to follow along.
 
 CleanMeter is the first gamer oriented clean statistics tracker, no fuss no muss, dead simple setup and good looking visuals.
 
@@ -28,5 +28,5 @@ CleanMeter is the first gamer oriented clean statistics tracker, no fuss no muss
 - Doesn't mess with your power profile or fan setup
 
 ### Current Limitations
-- Doesn't work with exclusive fullscreen
+- Doesn't work with exclusive fullscreen. Set your game to Borderless or Windowed instead, no real performance cost.
 - Given our mission is to look _good_ and _clean_ at the same time, we might hold on to release new features because we need time to think how to accommodate our UI. We can't just enable every possible sensor, sorry.
