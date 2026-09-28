@@ -99,7 +99,13 @@ fun HardwareMonitorData.getReading(identifier: String) = sensorsByIdentifier[ide
 fun HardwareMonitorData.getReading(identifier: String, namePart: String) = Sensors.firstOrNull { it.Identifier == identifier && it.Name.contains(namePart, true) }
 
 val HardwareMonitorData.FPS: Int
-    get() = (1000f / (getReading("/presentmon/frametime")?.Value ?: 1f)).toInt()
+    get() {
+        val frametime = getReading("/presentmon/frametime")?.Value ?: 0f
+        // No frame data (nothing presenting, or not started yet) divides by
+        // zero into Infinity, which toInt() turns into Int.MAX_VALUE rather
+        // than throwing, so it shows as a nonsense number instead of 0.
+        return if (frametime > 0f) (1000f / frametime).toInt() else 0
+    }
 
 // Computed in the backend from every frame, so these are real percentiles and
 // not something the sampled overlay could derive on its own.
