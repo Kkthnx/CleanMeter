@@ -149,6 +149,16 @@ public class MonitorPoller(
 
     private void OnClientData(byte[] data)
     {
+        // A truncated or corrupted packet here would otherwise throw out of
+        // PipeHost's read loop and force a reconnect. Not fatal to the
+        // service the way the PresentMon parsing was, but still cheap to
+        // guard: drop the bad packet and keep the connection.
+        if (data.Length < 2)
+        {
+            logger.LogWarning("Received a packet too short to contain a command, ignoring it");
+            return;
+        }
+
         var cmd = (MonitorPacketCommand)BitConverter.ToInt16(data, 0);
         logger.LogInformation("Received command from client: {Command}", cmd);
         switch (cmd)
@@ -163,17 +173,24 @@ public class MonitorPoller(
                 SelectPollingRate(data);
                 break;
 
-            // server -> client cases 
+            // server -> client cases
             case MonitorPacketCommand.Data:
             case MonitorPacketCommand.PresentMonApps:
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                logger.LogWarning("Received an unrecognized command value {Command}, ignoring it", (short)cmd);
+                break;
         }
     }
 
     private void SelectPollingRate(byte[] data)
     {
+        if (data.Length < 4)
+        {
+            logger.LogWarning("Received a SelectPollingRate packet too short to read, ignoring it");
+            return;
+        }
+
         // start at 2 because the first 2 were the command
         var pollingRate = BitConverter.ToInt16(data, 2);
         _pollingRate = Math.Max(pollingRate, MinimalPollingRate);
@@ -182,8 +199,20 @@ public class MonitorPoller(
 
     private void SelectPresentMonApp(byte[] data)
     {
+        if (data.Length < 4)
+        {
+            logger.LogWarning("Received a SelectPresentMonApp packet too short to read, ignoring it");
+            return;
+        }
+
         // start at 2 because the first 2 were the command
         var size = BitConverter.ToInt16(data, 2);
+        if (size < 0 || data.Length < 4 + size)
+        {
+            logger.LogWarning("Received a SelectPresentMonApp packet whose declared size does not fit, ignoring it");
+            return;
+        }
+
         var appName = Encoding.UTF8.GetString(data, 4, size);
         _presentMonPoller.SetSelectedApp(appName);
     }
