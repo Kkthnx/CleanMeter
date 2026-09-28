@@ -77,6 +77,12 @@ compose.desktop {
 
             windows {
                 iconFile.set(project.file("src/main/resources/imgs/favicon.ico"))
+                shortcut = true
+                menu = true
+                menuGroup = "CleanMeter"
+                // Fixed so jpackage upgrades the existing install instead of
+                // giving each build a random id and installing alongside it.
+                upgradeUuid = "262f1d90-90b9-4781-9a99-98d18a07cafc"
             }
 
             linux {
