@@ -24,7 +24,7 @@ fun StyleUi(
     onFontScaleChange: (Float) -> Unit,
     onGraphTypeChange: (OverlaySettings.ProgressType) -> Unit,
     onOverlayCustomPositionEnable: (Boolean) -> Unit,
-    onDisplaySelect: (Int) -> Unit,
+    onDisplaySelect: (index: Int, id: String) -> Unit,
     getOverlayPosition: () -> IntOffset,
 ) = Column(
     modifier = Modifier.padding(bottom = 8.dp, top = 20.dp).verticalScroll(rememberScrollState()),
@@ -64,7 +64,7 @@ fun StyleUi(
         title = "MONITOR",
         options = screenDevices.map { it.defaultConfiguration.device.iDstring },
         selectedIndex = overlaySettings.selectedDisplayIndex,
-        onValueChanged = { onDisplaySelect(it) },
+        onValueChanged = { onDisplaySelect(it, screenDevices[it].defaultConfiguration.device.iDstring) },
         tooltip = "Which display the overlay appears on when you have more than one monitor.",
     )
 }

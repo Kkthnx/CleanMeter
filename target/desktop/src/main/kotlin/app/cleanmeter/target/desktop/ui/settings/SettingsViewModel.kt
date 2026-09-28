@@ -53,7 +53,7 @@ sealed class SettingsEvent {
     data class OptionsToggle(val data: CheckboxSectionOption) : SettingsEvent()
     data class SwitchToggle(val section: SectionType, val isEnabled: Boolean) : SettingsEvent()
     data class CustomSensorSelect(val sensor: SensorType, val sensorId: String) : SettingsEvent()
-    data class DisplaySelect(val displayIndex: Int) : SettingsEvent()
+    data class DisplaySelect(val displayIndex: Int, val displayId: String) : SettingsEvent()
     data class OverlayPositionIndexSelect(val index: Int) : SettingsEvent()
     data class OverlayCustomPositionSelect(val offset: IntOffset, val isPositionLocked: Boolean) : SettingsEvent()
     data class OverlayCustomPositionEnable(val isEnabled: Boolean) : SettingsEvent()
@@ -208,7 +208,7 @@ class SettingsViewModel : ViewModel() {
             is SettingsEvent.OptionsToggle -> onOptionsToggle(event.data, this)
             is SettingsEvent.SwitchToggle -> onSwitchToggle(event.section, event.isEnabled, this)
             is SettingsEvent.CustomSensorSelect -> onCustomSensorSelect(event.sensor, event.sensorId, this)
-            is SettingsEvent.DisplaySelect -> onDisplaySelect(event.displayIndex, this)
+            is SettingsEvent.DisplaySelect -> onDisplaySelect(event.displayIndex, event.displayId, this)
             is SettingsEvent.OverlayPositionIndexSelect -> onOverlayPositionIndexSelect(event.index, this)
             is SettingsEvent.OverlayCustomPositionSelect -> onOverlayCustomPositionSelect(event.offset, event.isPositionLocked, this)
             is SettingsEvent.OverlayCustomPositionEnable -> onOverlayCustomPositionEnable(event.isEnabled, this)
@@ -438,10 +438,11 @@ class SettingsViewModel : ViewModel() {
         }
     }
 
-    private fun onDisplaySelect(displayIndex: Int, settingsState: SettingsState) {
+    private fun onDisplaySelect(displayIndex: Int, displayId: String, settingsState: SettingsState) {
         with(settingsState) {
             val newSettings = overlaySettings?.copy(
                 selectedDisplayIndex = displayIndex,
+                selectedDisplayId = displayId,
             )
 
             OverlaySettingsRepository.setOverlaySettings(newSettings)

@@ -10,6 +10,13 @@ data class OverlaySettings(
     val isHorizontal: Boolean = true,
     val positionIndex: Int = 0,
     val selectedDisplayIndex: Int = 0,
+    // Windows does not guarantee display enumeration order is stable between
+    // launches, especially at boot before every monitor has finished waking
+    // up, so selectedDisplayIndex alone can point at the wrong monitor on a
+    // later run. This id (GraphicsDevice.getIDstring) is matched first, with
+    // the index as a fallback for a fresh install or a monitor that is no
+    // longer connected.
+    val selectedDisplayId: String = "",
     val netGraph: Boolean = false,
     val progressType: ProgressType = ProgressType.Circular,
     val positionX: Int = 0,

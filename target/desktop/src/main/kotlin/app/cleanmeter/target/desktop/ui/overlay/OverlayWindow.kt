@@ -74,7 +74,17 @@ fun ApplicationScope.OverlayWindow(
 
     val graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment()
     val screenDevices = graphicsEnvironment.screenDevices
-    val graphicsConfiguration = screenDevices[overlayState.overlaySettings!!.selectedDisplayIndex].defaultConfiguration
+    // Windows does not guarantee monitor enumeration order is the same across
+    // launches (most noticeably at boot, before every monitor has finished
+    // waking up), so a plain index can point at a different monitor than the
+    // one the user picked. Match the saved device id first, and only fall
+    // back to the index for a fresh install or a monitor that is no longer
+    // connected.
+    val savedDisplayId = overlayState.overlaySettings!!.selectedDisplayId
+    val selectedDevice = screenDevices.firstOrNull { it.defaultConfiguration.device.iDstring == savedDisplayId }
+        ?: screenDevices.getOrNull(overlayState.overlaySettings!!.selectedDisplayIndex)
+        ?: screenDevices[0]
+    val graphicsConfiguration = selectedDevice.defaultConfiguration
     val taskbarHeight = Toolkit.getDefaultToolkit().screenSize.height - graphicsEnvironment.maximumWindowBounds.height
 
     Window(
