@@ -12,13 +12,12 @@ object Primitives {
         val Gray400 = Color(0xFF94969c)
         val Gray500 = Color(0xFF85888e)
         val Gray600 = Color(0xFF61646c)
-        // Dark surfaces carry a slight green bias so the window chrome sits in the
-        // same deep green-black world as the overlay. Lighter greys stay neutral
-        // to keep text and border contrast unchanged.
-        val Gray700 = Color(0xFF2e3630)
-        val Gray800 = Color(0xFF1a231d)
-        val Gray900 = Color(0xFF121a15)
-        val Gray950 = Color(0xFF0a100d)
+        // Dark surfaces are a true neutral charcoal, no hue bias, so the accent
+        // is the only color doing any talking.
+        val Gray700 = Color(0xFF242629)
+        val Gray800 = Color(0xFF1b1e21)
+        val Gray900 = Color(0xFF151719)
+        val Gray950 = Color(0xFF0d0e10)
 
     }
 
@@ -54,18 +53,21 @@ object Primitives {
     }
 
     object Green {
+        // Recentred on the mint accent (#2EE6A6): brighter and a touch cooler
+        // than the old #1BC978, meant to sit against a neutral ground rather
+        // than a green-biased one.
         val Green25 = Color(0xFFf6fef9)
         val Green50 = Color(0xFFecfdf3)
-        val Green100 = Color(0xFFd3f9e0)
-        val Green200 = Color(0xFFa6f0c6)
-        val Green300 = Color(0xFF6fe3a6)
-        val Green400 = Color(0xFF35d488)
-        val Green500 = Color(0xFF1bc978)
-        val Green600 = Color(0xFF12a862)
-        val Green700 = Color(0xFF0f8c52)
-        val Green800 = Color(0xFF0c6f42)
-        val Green900 = Color(0xFF0a5836)
-        val Green950 = Color(0xFF053321)
+        val Green100 = Color(0xFFd6fbec)
+        val Green200 = Color(0xFFacf6da)
+        val Green300 = Color(0xFF82f1c9)
+        val Green400 = Color(0xFF58ecb8)
+        val Green500 = Color(0xFF2ee6a6)
+        val Green600 = Color(0xFF1dae79)
+        val Green700 = Color(0xFF12784f)
+        val Green800 = Color(0xFF0e5a3f)
+        val Green900 = Color(0xFF0a3d2c)
+        val Green950 = Color(0xFF06251c)
 
     }
 
