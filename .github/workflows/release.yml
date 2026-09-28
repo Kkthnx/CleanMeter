@@ -1,7 +1,8 @@
 # Builds the desktop app and publishes it as a GitHub Release when a version
-# tag is pushed. The zip name and layout match what AutoUpdater.kt and the
-# Updater project expect (cleanmeter.windows.zip containing the cleanmeter
-# app folder), so in-app auto-update keeps working against this repo.
+# tag is pushed. Publishes two assets: cleanmeter.windows.zip, whose name and
+# layout match what AutoUpdater.kt and the Updater project expect so in-app
+# auto-update keeps working, and a real Windows installer (.exe, built via
+# jpackage/WiX) for anyone installing CleanMeter for the first time.
 
 name: Release
 
@@ -40,11 +41,16 @@ jobs:
         working-directory: target/desktop/build/compose/binaries/main/app
         run: Compress-Archive -Path cleanmeter -DestinationPath cleanmeter.windows.zip
 
+      - name: Build installer
+        run: ./gradlew :target:desktop:packageExe
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $installer = Get-ChildItem "target/desktop/build/compose/binaries/main/exe/*.exe" | Select-Object -First 1
           gh release create "${{ github.ref_name }}" `
             "target/desktop/build/compose/binaries/main/app/cleanmeter.windows.zip" `
+            "$($installer.FullName)#CleanMeter-${{ github.ref_name }}-installer.exe" `
             --title "${{ github.ref_name }}" `
             --generate-notes
