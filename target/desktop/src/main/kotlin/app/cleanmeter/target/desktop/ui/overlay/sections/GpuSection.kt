@@ -16,6 +16,7 @@ import app.cleanmeter.target.desktop.ui.components.Progress
 import app.cleanmeter.target.desktop.ui.components.ProgressLabel
 import app.cleanmeter.target.desktop.ui.components.ProgressUnit
 import java.util.*
+import kotlin.math.roundToInt
 
 private fun OverlaySettings.Sensors.isAllValid(): Boolean {
     return gpuTemp.isValid() || gpuUsage.isValid() || vramUsage.isValid()
@@ -34,8 +35,9 @@ internal fun GpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                     customReadingId = overlaySettings.sensors.gpuTemp.customReadingId,
                     progressType = overlaySettings.progressType,
                     progressUnit = "°C",
-                    label = { "${it.toInt()}" },
+                    label = { "${it.roundToInt()}" },
                     boundaries = overlaySettings.sensors.gpuTemp.boundaries,
+                    zeroIsMissing = true,
                 )
             }
 

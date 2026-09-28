@@ -22,6 +22,7 @@ fun CheckboxSection(
     options: List<CheckboxSectionOption>,
     onOptionToggle: (CheckboxSectionOption) -> Unit,
     onSwitchToggle: (Boolean) -> Unit,
+    tooltip: String? = null,
 ) = SectionBody {
     val isAnySelected by remember(options) { derivedStateOf { options.any { it.isSelected } } }
 
@@ -30,7 +31,7 @@ fun CheckboxSection(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SectionTitle(title = title)
+        SectionTitle(title = title, tooltip = tooltip)
         Toggle(
             checked = isAnySelected,
             onCheckedChange = onSwitchToggle
@@ -55,6 +56,7 @@ fun CustomBodyCheckboxSection(
     title: String,
     options: List<CheckboxSectionOption>,
     onSwitchToggle: (Boolean) -> Unit,
+    tooltip: String? = null,
     body: @Composable (List<CheckboxSectionOption>) -> Unit,
 ) = SectionBody {
     val isAnySelected by remember(options) { derivedStateOf { options.any { it.isSelected } } }
@@ -64,7 +66,7 @@ fun CustomBodyCheckboxSection(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SectionTitle(title = title)
+        SectionTitle(title = title, tooltip = tooltip)
         Toggle(
             checked = isAnySelected,
             onCheckedChange = onSwitchToggle

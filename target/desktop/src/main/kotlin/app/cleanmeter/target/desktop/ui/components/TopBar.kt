@@ -1,8 +1,6 @@
 package app.cleanmeter.target.desktop.ui.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import app.cleanmeter.core.designsystem.LocalColorScheme
 import app.cleanmeter.core.designsystem.LocalTypography
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun TopBar(
     onCloseRequest: () -> Unit,
@@ -63,23 +60,17 @@ internal fun TopBar(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { onMinimizeRequest() }, modifier = Modifier.size(20.dp).clearAndSetSemantics { }) {
-                Icon(
-                    imageVector = Icons.Rounded.Minimize,
-                    contentDescription = "Minimize window",
-                    tint = LocalColorScheme.current.icon.bolderActive,
-                )
+            InfoTooltip(text = "Minimize to the taskbar") {
+                IconButton(onClick = { onMinimizeRequest() }, modifier = Modifier.size(20.dp).clearAndSetSemantics { }) {
+                    Icon(
+                        imageVector = Icons.Rounded.Minimize,
+                        contentDescription = "Minimize window",
+                        tint = LocalColorScheme.current.icon.bolderActive,
+                    )
+                }
             }
 
-            TooltipArea(
-                delayMillis = 0,
-                tooltip = {
-                    Text(
-                        text = "Closing will minimize to the Tray",
-                        style = LocalTypography.current.labelM,
-                        color = LocalColorScheme.current.text.heading,
-                    )
-                }) {
+            InfoTooltip(text = "Closing keeps CleanMeter running in the system tray. Right-click the tray icon to quit.") {
                 IconButton(onClick = { onCloseRequest() }, modifier = Modifier.size(20.dp).clearAndSetSemantics { }) {
                     Icon(
                         imageVector = Icons.Rounded.Close,

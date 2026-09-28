@@ -21,6 +21,7 @@ fun StyleUi(
     onOverlayCustomPosition: (IntOffset, Boolean) -> Unit,
     onLayoutChange: (Boolean) -> Unit,
     onOpacityChange: (Float) -> Unit,
+    onFontScaleChange: (Float) -> Unit,
     onGraphTypeChange: (OverlaySettings.ProgressType) -> Unit,
     onOverlayCustomPositionEnable: (Boolean) -> Unit,
     onDisplaySelect: (Int) -> Unit,
@@ -49,6 +50,11 @@ fun StyleUi(
         onOpacityChange = onOpacityChange
     )
 
+    FontSize(
+        overlaySettings = overlaySettings,
+        onFontScaleChange = onFontScaleChange
+    )
+
     GraphType(
         overlaySettings = overlaySettings,
         onGraphTypeChange = onGraphTypeChange
@@ -58,6 +64,7 @@ fun StyleUi(
         title = "MONITOR",
         options = screenDevices.map { it.defaultConfiguration.device.iDstring },
         selectedIndex = overlaySettings.selectedDisplayIndex,
-        onValueChanged = { onDisplaySelect(it) }
+        onValueChanged = { onDisplaySelect(it) },
+        tooltip = "Which display the overlay appears on when you have more than one monitor.",
     )
 }

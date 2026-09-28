@@ -37,6 +37,7 @@ internal fun GpuStats(
             SensorType.GpuConsumption,
         ),
         onSwitchToggle = { onSectionSwitchToggle(SectionType.Gpu, it) },
+        tooltip = "Graphics card temperature, usage, VRAM and power. Use the Sensor dropdowns to choose which reading each shows.",
         body = { options ->
             Column(modifier = Modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 options.forEach { option ->

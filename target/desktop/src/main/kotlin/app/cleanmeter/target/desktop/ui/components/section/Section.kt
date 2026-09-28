@@ -11,6 +11,7 @@ import app.cleanmeter.target.desktop.ui.components.SectionTitle
 @Composable
 fun Section(
     title: String,
+    tooltip: String? = null,
     content: @Composable () -> Unit
 ) = SectionBody {
     Row(
@@ -18,7 +19,7 @@ fun Section(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-       SectionTitle(title = title)
+       SectionTitle(title = title, tooltip = tooltip)
     }
 
     content()

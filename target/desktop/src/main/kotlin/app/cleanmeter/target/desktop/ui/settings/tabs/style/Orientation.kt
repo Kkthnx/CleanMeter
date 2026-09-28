@@ -18,7 +18,10 @@ internal fun Orientation(
     overlaySettings: OverlaySettings,
     onLayoutChange: (Boolean) -> Unit
 ) {
-    CollapsibleSection(title = "ORIENTATION") {
+    CollapsibleSection(
+        title = "ORIENTATION",
+        tooltip = "Lay the overlay out as a horizontal bar or a vertical stack.",
+    ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {

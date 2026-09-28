@@ -25,7 +25,7 @@ class OverlayViewModel : ViewModel() {
 
     init {
         observeOverlaySettings()
-        observeHwInfo()
+        observeHardwareData()
     }
 
     private fun observeOverlaySettings() {
@@ -38,7 +38,7 @@ class OverlayViewModel : ViewModel() {
         }
     }
 
-    private fun observeHwInfo() {
+    private fun observeHardwareData() {
         CoroutineScope(Dispatchers.IO).launch {
             HardwareMonitorReader
                 .currentData

@@ -75,7 +75,10 @@ internal fun HelpSettingsUi(
             title = "CURRENT LIMITATIONS",
         ) {
             BulletList(
-                listOf("Doesn't work with exclusive fullscreen")
+                listOf(
+                    "Exclusive fullscreen hides the overlay. Set the game to Borderless or Windowed and the overlay will show over it, with no real performance cost.",
+                    "Anti-cheat protected games may block the overlay. That is expected and keeps you safe from bans, since drawing inside those games is not allowed.",
+                )
             )
         }
 
@@ -85,16 +88,7 @@ internal fun HelpSettingsUi(
             FrequentlyAskedQuestions(
                 "The sensors look wrong" to buildAnnotatedString { append("Try setting up each sensor via the Stats tab") },
                 "Neither sensors dropdown or the overlay are showing up" to buildAnnotatedString {
-                    append("You need to have ")
-                    pushStringAnnotation(
-                        "click",
-                        "https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.11-windows-x64-installer"
-                    )
-                    withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
-                        append(".NET Core Framework")
-                    }
-                    pop()
-                    append(" installed")
+                    append("The sensor service needs administrator access to read your hardware. Close CleanMeter and reopen it, accepting the elevation prompt, then set up each sensor in the Stats tab.")
                 },
                 "Having problems like crashes or still nothing showing up?" to buildAnnotatedString {
                     append("Launch the app with ")

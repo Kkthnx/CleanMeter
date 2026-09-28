@@ -15,13 +15,14 @@ fun DropdownSection(
     options: List<String>,
     onValueChanged: (Int) -> Unit,
     selectedIndex: Int,
+    tooltip: String? = null,
 ) = SectionBody {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        SectionTitle(title = title)
+        SectionTitle(title = title, tooltip = tooltip)
     }
 
     DropdownMenu(
