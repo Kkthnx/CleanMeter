@@ -65,6 +65,7 @@ class Typography {
         @Composable get() = defaultTextStyle.copy(
             fontSize = 14.sp,
             lineHeight = 0.sp,
+            fontWeight = FontWeight.Thin,
             fontFamily = fontFamilyThin,
         )
 
@@ -172,7 +173,7 @@ class Typography {
 //    Font(resource = "font/inter_black.ttf", weight = FontWeight.Black),
 
     private val fontFamilyThin = FontFamily(
-        Font(resource = "font/inter_thin.ttf", weight = FontWeight.SemiBold),
+        Font(resource = "font/inter_thin.ttf", weight = FontWeight.Thin),
     )
 
     private val fontFamilyNormal = FontFamily(
