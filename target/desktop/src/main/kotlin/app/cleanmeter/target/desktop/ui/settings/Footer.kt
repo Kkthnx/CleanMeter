@@ -97,7 +97,7 @@ fun FooterUi(modifier: Modifier = Modifier) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    uriHandler.openUri("https://github.com/Danil0v3s/CleanMeter/releases/latest")
+                    uriHandler.openUri("https://github.com/Kkthnx/CleanMeter/releases/latest")
                 }) {
 
                 Text(
@@ -118,7 +118,7 @@ private fun Github(uriHandler: UriHandler) {
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable {
-                uriHandler.openUri("https://github.com/Danil0v3s/CleanMeter/releases/latest")
+                uriHandler.openUri("https://github.com/Kkthnx/CleanMeter/releases/latest")
             }
             .fillMaxWidth()
             .background(Color.Transparent, RoundedCornerShape(12.dp))

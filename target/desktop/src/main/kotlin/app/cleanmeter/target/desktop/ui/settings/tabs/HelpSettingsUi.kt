@@ -102,7 +102,7 @@ internal fun HelpSettingsUi(
                     }
                     pop()
                     append(" or ")
-                    pushStringAnnotation("click", "https://github.com/Danil0v3s/CleanMeter/issues")
+                    pushStringAnnotation("click", "https://github.com/Kkthnx/CleanMeter/issues")
                     withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
                         append("GitHub Issues")
                     }

@@ -1,0 +1,50 @@
+# Builds the desktop app and publishes it as a GitHub Release when a version
+# tag is pushed. The zip name and layout match what AutoUpdater.kt and the
+# Updater project expect (cleanmeter.windows.zip containing the cleanmeter
+# app folder), so in-app auto-update keeps working against this repo.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.200'
+
+      - name: Set up JDK 22
+        uses: actions/setup-java@v4
+        with:
+          java-version: '22'
+          distribution: 'corretto'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+      - name: Build distributable
+        run: ./gradlew :target:desktop:createDistributable
+
+      - name: Package release zip
+        working-directory: target/desktop/build/compose/binaries/main/app
+        run: Compress-Archive -Path cleanmeter -DestinationPath cleanmeter.windows.zip
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" `
+            "target/desktop/build/compose/binaries/main/app/cleanmeter.windows.zip" `
+            --title "${{ github.ref_name }}" `
+            --generate-notes
