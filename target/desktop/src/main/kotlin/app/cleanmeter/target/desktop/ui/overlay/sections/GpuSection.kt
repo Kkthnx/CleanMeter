@@ -47,18 +47,19 @@ internal fun GpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                     customReadingId = overlaySettings.sensors.gpuUsage.customReadingId,
                     progressType = overlaySettings.progressType,
                     progressUnit = "%",
-                    label = { String.format("%02d", it.toInt(), Locale.US) },
+                    label = { String.format("%02d", it.roundToInt(), Locale.US) },
                     boundaries = overlaySettings.sensors.gpuUsage.boundaries,
                 )
             }
 
             if (overlaySettings.sensors.vramUsage.isValid() && overlaySettings.sensors.totalVramUsed.isValid()) {
-                val vramUsage = data.getReading(overlaySettings.sensors.vramUsage.customReadingId, "memory")?.Value?.coerceAtLeast(1f) ?: 1f
-                val totalVramUsed = data.getReading(overlaySettings.sensors.totalVramUsed.customReadingId)?.Value?.coerceAtLeast(1f) ?: 1f
+                val vramUsageReading = data.getReading(overlaySettings.sensors.vramUsage.customReadingId, "memory")
+                val totalVramUsedReading = data.getReading(overlaySettings.sensors.totalVramUsed.customReadingId)
+                val isMissing = vramUsageReading == null || totalVramUsedReading == null
 
                 Progress(
-                    value = vramUsage / 100f,
-                    label = String.format("%02.1f", totalVramUsed / 1000, Locale.US),
+                    value = if (isMissing) 0f else (vramUsageReading?.Value ?: 0f) / 100f,
+                    label = if (isMissing) "--" else String.format("%02.1f", (totalVramUsedReading?.Value ?: 0f) / 1000, Locale.US),
                     unit = "GB",
                     progressType = overlaySettings.progressType,
                     boundaries = overlaySettings.sensors.vramUsage.boundaries,
@@ -67,9 +68,8 @@ internal fun GpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
 
             if (overlaySettings.sensors.gpuConsumption.isValid()) {
                 val reading = data.getReading(overlaySettings.sensors.gpuConsumption.customReadingId)
-                val value = (reading?.Value ?: 1f).coerceAtLeast(1f).toInt()
                 Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.widthIn(min = 35.dp).padding(bottom = 2.dp)) {
-                    ProgressLabel("$value")
+                    ProgressLabel(if (reading == null) "--" else "${reading.Value.toInt()}")
                     ProgressUnit("W")
                 }
             }

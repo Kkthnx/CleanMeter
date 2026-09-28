@@ -49,16 +49,15 @@ internal fun CpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                     customReadingId = overlaySettings.sensors.cpuUsage.customReadingId,
                     progressType = overlaySettings.progressType,
                     progressUnit = "%",
-                    label = { String.format("%02d", it.toInt(), Locale.US) },
+                    label = { String.format("%02d", it.roundToInt(), Locale.US) },
                     boundaries = overlaySettings.sensors.cpuUsage.boundaries,
                 )
             }
 
             if (overlaySettings.sensors.cpuConsumption.isValid()) {
                 val reading = data.getReading(overlaySettings.sensors.cpuConsumption.customReadingId)
-                val value = (reading?.Value ?: 1f).coerceAtLeast(1f).toInt()
                 Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.widthIn(min = 35.dp).padding(bottom = 2.dp)) {
-                    ProgressLabel("$value")
+                    ProgressLabel(if (reading == null) "--" else "${reading.Value.toInt()}")
                     ProgressUnit("W")
                 }
             }
