@@ -18,9 +18,10 @@ object HardwareMonitorProcessManager {
             "$currentDir\\app\\resources\\HardwareMonitor.exe"
         }
 
-        process = ProcessBuilder().apply {
-            command("cmd.exe", "/c", file)
-        }.start()
+        // Launched directly rather than through "cmd.exe /c file", since cmd
+        // splits an unquoted path on its first space and this path lives under
+        // Program Files on a default install, which breaks the launch there.
+        process = ProcessBuilder(file).start()
 
         val scannerIn = Scanner(process!!.inputStream)
         val scannerErr = Scanner(process!!.errorStream)
@@ -51,7 +52,7 @@ object HardwareMonitorProcessManager {
         val command = listOf(
             "cmd.exe",
             "/c",
-            "sc create svcleanmeter displayname= \"CleanMeter Service\" binPath= $file start= auto group= LocalServiceNoNetworkFirewall"
+            "sc create svcleanmeter displayname= \"CleanMeter Service\" binPath= \"$file\" start= auto group= LocalServiceNoNetworkFirewall"
         )
         ProcessBuilder().apply {
             command(command)

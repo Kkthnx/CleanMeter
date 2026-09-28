@@ -5,6 +5,7 @@ import app.cleanmeter.core.common.reporting.setDefaultUncaughtExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.net.InetAddress
 import java.net.ServerSocket
 import kotlin.system.exitProcess
 
@@ -21,7 +22,10 @@ fun singleInstance(args: Array<out String>, block: () -> Unit) {
 }
 
 private fun isAppAlreadyRunning() = try {
-    ServerSocket(42069).apply {
+    // Loopback only. This socket only exists to detect a second launch, so it
+    // has no reason to accept connections from the network and trigger a
+    // firewall prompt.
+    ServerSocket(42069, 0, InetAddress.getLoopbackAddress()).apply {
         Runtime.getRuntime().addShutdownHook(Thread {
             close()
         })

@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.awt.Desktop
 import java.io.File
-import java.nio.file.Path
 import kotlin.system.exitProcess
 
 sealed class UpdateState {
@@ -126,21 +125,6 @@ object AutoUpdater {
                 file.delete()
             }
         }
-    }
-
-    private fun invokeUpdater(packageFile: File) {
-        val currentDir = Path.of("").toAbsolutePath().toString()
-        val file = "$currentDir\\app\\resources\\Updater.exe"
-        ProcessBuilder().apply {
-            command(
-                "cmd.exe",
-                "/c",
-                file,
-                "--package=${packageFile.path}",
-                "--path=$currentDir",
-                "--autostart=${ApplicationParams.isAutostart}"
-            )
-        }.start()
     }
 
     private suspend fun HttpClient.getPropertiesMap(): Map<String, String> {

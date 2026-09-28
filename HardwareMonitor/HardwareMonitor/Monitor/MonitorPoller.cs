@@ -82,7 +82,7 @@ public class MonitorPoller(
 
             if (_socketHost.HasConnections())
             {
-                _socketHost.SendToAll(memoryStream.ToArray());
+                await _socketHost.SendToAllAsync(memoryStream.ToArray());
             } else
             {
                 //logger.LogInformation("No clients connected, not sending data");
