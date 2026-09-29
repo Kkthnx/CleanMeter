@@ -91,7 +91,7 @@ compose.desktop {
             includeAllModules = true
 
             windows {
-                iconFile.set(project.file("src/main/resources/imgs/favicon.ico"))
+                iconFile.set(project.file("installer-resources/windows/cleanmeter.ico"))
                 shortcut = true
                 menu = true
                 menuGroup = "CleanMeter"
