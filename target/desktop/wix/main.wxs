@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Hand-authored replacement for jpackage's own MSI/EXE bundler.
+
+  jpackage's Windows installer references <UIRef Id="JpUI"/> in its
+  main.wxs, but JpUI itself is compiled into jpackage's internal WiX
+  library, not exposed through jpackage's resource-dir override as a plain
+  file. Swapping it for the standard WixUI_InstallDir dialog set (which
+  does support banner and dialog bitmaps) would need WixUIExtension
+  linked, but jpackage's own
+  light.exe/candle.exe invocation only links WixUtilExtension. On top of
+  that, jpackage auto-detects WiX 3 vs 4/5 on whatever machine builds it and
+  silently converts WiX3-syntax files to WiX4 if the newer toolset is
+  present, which is exactly the kind of thing that can only be verified
+  with a real build. Building our own WiX project instead sidesteps all of
+  that: we choose the WiX version, we link whatever extensions we need, and
+  the whole thing is testable standalone with `wix build`, independent of
+  Gradle.
+
+  UpgradeCode is unchanged from what jpackage's bundler used for 1.2.1
+  through 1.2.6, so this correctly detects and replaces those installs
+  (Windows Installer upgrade detection is UpgradeCode-based only; it does
+  not care which tool produced either MSI).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package Name="CleanMeter"
+           Manufacturer="Kkthnx"
+           Version="$(var.CmVersion)"
+           UpgradeCode="262f1d90-90b9-4781-9a99-98d18a07cafc"
+           InstallerVersion="500"
+           Scope="perMachine">
+
+    <SummaryInformation Description="Lightweight hardware monitor overlay for gaming" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of CleanMeter is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Property Id="ARPPRODUCTICON" Value="CmIcon" />
+    <Icon Id="CmIcon" SourceFile="$(var.CmResourcesDir)\cleanmeter.ico" />
+    <Property Id="ARPCONTACT" Value="Kkthnx" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="cleanmeter" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="CleanMeter" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <ComponentGroup Id="AppFiles">
+      <Files Include="$(var.CmAppImageDir)\**" Directory="INSTALLFOLDER" />
+    </ComponentGroup>
+
+    <Component Id="StartMenuShortcut" Directory="ApplicationProgramsFolder" Guid="2d1ffc17-7b24-4c96-ad48-ea84ca1bcf32">
+      <Shortcut Id="StartMenuShortcutEntry"
+                Name="CleanMeter"
+                Description="Lightweight hardware monitor overlay for gaming"
+                Target="[INSTALLFOLDER]cleanmeter.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="CmIcon" />
+      <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\CleanMeter" Name="StartMenuShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="8ff05035-d282-42cf-8c49-522b8ac6bcb5">
+      <Shortcut Id="DesktopShortcutEntry"
+                Name="CleanMeter"
+                Description="Lightweight hardware monitor overlay for gaming"
+                Target="[INSTALLFOLDER]cleanmeter.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="CmIcon" />
+      <RegistryValue Root="HKCU" Key="Software\CleanMeter" Name="DesktopShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Feature Id="Main" Title="CleanMeter" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.CmResourcesDir)\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.CmResourcesDir)\dialog.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.CmResourcesDir)\license.rtf" />
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+  </Package>
+</Wix>

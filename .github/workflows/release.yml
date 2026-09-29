@@ -1,8 +1,16 @@
 # Builds the desktop app and publishes it as a GitHub Release when a version
 # tag is pushed. Publishes two assets: cleanmeter.windows.zip, whose name and
 # layout match what AutoUpdater.kt and the Updater project expect so in-app
-# auto-update keeps working, and a real Windows installer (.exe, built via
-# jpackage/WiX) for anyone installing CleanMeter for the first time.
+# auto-update keeps working, and a real Windows installer (.msi) for anyone
+# installing CleanMeter for the first time.
+#
+# The installer is built from our own WiX project (target/desktop/wix),
+# not jpackage's bundler. jpackage's own installer UI (<UIRef Id="JpUI"/>
+# in its main.wxs) is compiled into jpackage itself, not overridable
+# through its resource-dir mechanism, and its light.exe/candle.exe
+# invocation does not link WixUIExtension, so there is no safe way to add
+# custom banner/dialog art through jpackage directly. See
+# target/desktop/wix/main.wxs for the full explanation.
 
 name: Release
 
@@ -41,16 +49,29 @@ jobs:
         working-directory: target/desktop/build/compose/binaries/main/app
         run: Compress-Archive -Path cleanmeter -DestinationPath cleanmeter.windows.zip
 
+      - name: Setup WiX
+        working-directory: target/desktop/wix
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          wix extension add WixToolset.UI.wixext/5.0.2
+
       - name: Build installer
-        run: ./gradlew :target:desktop:packageExe
+        working-directory: target/desktop/wix
+        run: |
+          wix build main.wxs `
+            -ext WixToolset.UI.wixext `
+            -arch x64 `
+            -d CmVersion="${{ github.ref_name }}.0" `
+            -d CmResourcesDir="${{ github.workspace }}\target\desktop\installer-resources\windows" `
+            -d CmAppImageDir="${{ github.workspace }}\target\desktop\build\compose\binaries\main\app\cleanmeter" `
+            -o "${{ github.workspace }}\cleanmeter-${{ github.ref_name }}.msi"
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $installer = Get-ChildItem "target/desktop/build/compose/binaries/main/exe/*.exe" | Select-Object -First 1
           gh release create "${{ github.ref_name }}" `
             "target/desktop/build/compose/binaries/main/app/cleanmeter.windows.zip" `
-            "$($installer.FullName)#CleanMeter-${{ github.ref_name }}-installer.exe" `
+            "cleanmeter-${{ github.ref_name }}.msi#CleanMeter-${{ github.ref_name }}-installer.msi" `
             --title "${{ github.ref_name }}" `
             --generate-notes

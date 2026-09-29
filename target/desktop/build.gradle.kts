@@ -2,11 +2,12 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import java.time.Year
 
 // Compose reads this root at packaging time for every distributable target
-// (createDistributable, runDistributable, and every jpackage exe/msi task),
-// merging the per-OS subfolder into that build's app/resources. Writing into
-// a build output folder directly, like these tasks used to, only reaches
-// createDistributable's own output and never the installer's, since jpackage
-// builds its own app image from this root rather than from that folder.
+// (createDistributable and runDistributable), merging the per-OS subfolder
+// into that build's app/resources. The Windows installer is our own WiX
+// project (target/desktop/wix), built directly from createDistributable's
+// output rather than through a jpackage exe/msi task, so this only needs to
+// cover createDistributable/runDistributable now, not a jpackage bundler
+// task too.
 val monitorResourcesDir = layout.buildDirectory.dir("monitorResources/windows")
 
 val compileMonitor = tasks.register<Exec>("compileMonitor") {
@@ -58,12 +59,9 @@ compose.desktop {
 
         afterEvaluate {
             // prepareAppResources is Compose's own task that Syncs
-            // appResourcesRootDir into every distributable image, so hooking
-            // it here (rather than createDistributable/packageExe, which
-            // both depend on it) covers the zip and every jpackage exe/msi
-            // task from the one place that actually reads this output.
-            // Gradle's own task validation caught the earlier, looser hook:
-            // it read copyMonitorFiles' output with no declared dependency.
+            // appResourcesRootDir into the distributable image. Gradle's own
+            // task validation caught an earlier, looser hook here: it read
+            // copyMonitorFiles' output with no declared dependency.
             tasks.matching { it.name == "prepareAppResources" }.configureEach {
                 dependsOn(copyMonitorFiles)
             }
@@ -78,7 +76,11 @@ compose.desktop {
         nativeDistributions {
             val projectVersion: String by project
 
-            targetFormats(TargetFormat.Exe, TargetFormat.Deb)
+            // Windows no longer uses jpackage's own exe/msi bundler; the
+            // installer is built by our own WiX project instead (see
+            // target/desktop/wix/main.wxs for why). Deb packaging for Linux
+            // is unaffected and still goes through jpackage normally.
+            targetFormats(TargetFormat.Deb)
 
             packageName = "cleanmeter"
             packageVersion = projectVersion
@@ -89,16 +91,6 @@ compose.desktop {
             appResourcesRootDir.set(layout.buildDirectory.dir("monitorResources"))
 
             includeAllModules = true
-
-            windows {
-                iconFile.set(project.file("installer-resources/windows/cleanmeter.ico"))
-                shortcut = true
-                menu = true
-                menuGroup = "CleanMeter"
-                // Fixed so jpackage upgrades the existing install instead of
-                // giving each build a random id and installing alongside it.
-                upgradeUuid = "262f1d90-90b9-4781-9a99-98d18a07cafc"
-            }
 
             linux {
                 iconFile.set(project.file("src/main/resources/imgs/logo.png"))
