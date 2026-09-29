@@ -11,6 +11,20 @@ object HardwareMonitorProcessManager {
     private var process: Process? = null
 
     fun start() {
+        // Windows named pipes allow multiple server instances of the same
+        // name to coexist, and a client connecting does not get to pick
+        // which one it lands on. A stale HardwareMonitor.exe left over from
+        // an earlier session (a crash, or a prior CleanMeter build that
+        // could leave its own process behind on exit) is still a live pipe
+        // server, so a fresh launch here can silently end up talking to
+        // that dead instance instead of its own, which looks exactly like
+        // every stat freezing right after a clean restart. Only one
+        // instance of this app should ever be running (SingleInstance),
+        // so any HardwareMonitor.exe still alive at this point is stale.
+        ProcessHandle.allProcesses()
+            .filter { it.info().command().map { cmd -> cmd.endsWith("HardwareMonitor.exe") }.orElse(false) }
+            .forEach { it.destroyForcibly() }
+
         val currentDir = Path.of("").toAbsolutePath().toString()
         val file = if (isDev()) {
             "$currentDir\\HardwareMonitor\\HardwareMonitor\\bin\\Release\\net8.0\\win-x64\\native\\HardwareMonitor.exe"

@@ -35,6 +35,15 @@ public class PresentMonPoller(ILogger logger)
 
     private string _currentSelectedApp = NO_SELECTED_APP;
 
+    // In Auto mode this tracks whichever non-excluded app is presenting the
+    // most frames right now, the way RTSS/MSI Afterburner favor the active
+    // game rather than showing whatever process's line happened to arrive
+    // last. Reset on the same 10s cadence as CurrentApps so a closed game
+    // does not keep winning on stale counts.
+    private readonly object _frameCountLock = new();
+    private readonly Dictionary<string, int> _frameCounts = new();
+    private string? _autoSelectedApp;
+
     public async void Start(CancellationToken stoppingToken)
     {
         _cultureInfo.NumberFormat.NumberDecimalSeparator = ".";
@@ -112,9 +121,25 @@ public class PresentMonPoller(ILogger logger)
         var parts = argsData.Split(",");
         if (parts.Length < MinExpectedColumns) return;
 
-        CurrentApps.Add(parts[0]);
+        var appName = parts[0];
+        CurrentApps.Add(appName);
 
-        if (_currentSelectedApp != NO_SELECTED_APP && _currentSelectedApp != parts[0])
+        string? effectiveApp;
+        if (_currentSelectedApp == NO_SELECTED_APP)
+        {
+            lock (_frameCountLock)
+            {
+                _frameCounts[appName] = _frameCounts.GetValueOrDefault(appName) + 1;
+                _autoSelectedApp = _frameCounts.MaxBy(kv => kv.Value).Key;
+                effectiveApp = _autoSelectedApp;
+            }
+        }
+        else
+        {
+            effectiveApp = _currentSelectedApp;
+        }
+
+        if (effectiveApp != appName)
         {
             return;
         }
@@ -147,6 +172,7 @@ public class PresentMonPoller(ILogger logger)
     {
         // Different app means the frame history no longer applies, so start fresh.
         lock (_frametimeLock) _frametimes.Clear();
+        lock (_frameCountLock) _frameCounts.Clear();
 
         if (appName == "Auto")
         {
@@ -222,6 +248,7 @@ public class PresentMonPoller(ILogger logger)
         await Task.Delay(10_000, cancellationToken);
         OnUpdateApps?.Invoke();
         CurrentApps.Clear();
+        lock (_frameCountLock) _frameCounts.Clear();
         _ = ClearCurrentAppsAsync(cancellationToken);
     }
 }

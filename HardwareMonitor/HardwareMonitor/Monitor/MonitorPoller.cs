@@ -71,38 +71,56 @@ public class MonitorPoller(
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (!_socketHost.HasConnections())
+            try
             {
-                //logger.LogInformation("No clients connected, waiting for connections...");
-                await Task.Delay(1000, stoppingToken);
-                continue;
-            }
-
-            foreach (var hardware in sharedMemoryData.Hardwares)
-            {
-                try
+                if (!_socketHost.HasConnections())
                 {
-                    hardware.Update();
+                    //logger.LogInformation("No clients connected, waiting for connections...");
+                    await Task.Delay(1000, stoppingToken);
+                    continue;
                 }
-                catch
+
+                foreach (var hardware in sharedMemoryData.Hardwares)
                 {
-                    hardware.StopUpdates();
-                    logger.LogError("Stopping updates of {HardwareName} - {HardwareIdentifier}", hardware.Name, hardware.Identifier);
+                    try
+                    {
+                        hardware.Update();
+                    }
+                    catch
+                    {
+                        hardware.StopUpdates();
+                        logger.LogError("Stopping updates of {HardwareName} - {HardwareIdentifier}", hardware.Name, hardware.Identifier);
+                    }
                 }
+
+                _presentMonPoller.UpdateAggregates();
+                WriteDataToStream(writer, sharedMemoryData);
+
+                if (_socketHost.HasConnections())
+                {
+                    await _socketHost.SendToAllAsync(memoryStream.ToArray());
+                } else
+                {
+                    //logger.LogInformation("No clients connected, not sending data");
+                }
+
+                await Task.Delay(_pollingRate, stoppingToken);
             }
-
-            _presentMonPoller.UpdateAggregates();
-            WriteDataToStream(writer, sharedMemoryData);
-
-            if (_socketHost.HasConnections())
+            catch (OperationCanceledException)
             {
-                await _socketHost.SendToAllAsync(memoryStream.ToArray());
-            } else
-            {
-                //logger.LogInformation("No clients connected, not sending data");
+                throw;
             }
-
-            await Task.Delay(_pollingRate, stoppingToken);
+            catch (Exception ex)
+            {
+                // BackgroundService does not restart or crash the process on
+                // an unhandled exception here by default, it just silently
+                // stops this loop forever while the app keeps running, which
+                // looks exactly like every stat freezing with no crash and
+                // no way to recover short of restarting the whole app. One
+                // bad iteration must not be allowed to end the loop.
+                logger.LogError(ex, "Unhandled error in the monitor poll loop, continuing");
+                await Task.Delay(_pollingRate, stoppingToken);
+            }
         }
 
         Stop();
