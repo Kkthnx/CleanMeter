@@ -18,7 +18,14 @@ object OverlaySettingsRepository {
     val data: Flow<OverlaySettings>
         get() = _data.filterNotNull()
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    // limitedParallelism(1) keeps writes off the calling thread while still
+    // running them strictly in dispatch order. setOverlaySettings fires on
+    // every change, including every tick of a continuous slider drag, so a
+    // plain Dispatchers.IO scope would let those writes to the same
+    // registry key race on the IO thread pool: whichever one happens to
+    // finish last wins, not whichever was actually triggered last, and the
+    // persisted value can end up stale relative to what the user landed on.
+    private val scope = CoroutineScope(Dispatchers.IO.limitedParallelism(1))
 
     init {
         _data.value = PreferencesRepository.loadOverlaySettings()

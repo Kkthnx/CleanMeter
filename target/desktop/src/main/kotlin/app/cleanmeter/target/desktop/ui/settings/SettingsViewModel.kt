@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import app.cleanmeter.core.common.hardwaremonitor.HardwareMonitorData
 import app.cleanmeter.core.os.PREFERENCE_PERMISSION_CONSENT
 import app.cleanmeter.core.os.PreferencesRepository
+import app.cleanmeter.core.os.appDataDir
 import app.cleanmeter.core.os.hardwaremonitor.HardwareMonitorProcessManager
 import app.cleanmeter.core.os.hardwaremonitor.HardwareMonitorReader
 import app.cleanmeter.core.os.hardwaremonitor.Packet
@@ -178,7 +179,7 @@ class SettingsViewModel : ViewModel() {
                         }
 
                         !state.isRecording && dataHistory.isNotEmpty() -> {
-                            File("cleanmeter.recording.${System.currentTimeMillis()}.json").printWriter().use {
+                            File(appDataDir("Recordings"), "cleanmeter.recording.${System.currentTimeMillis()}.json").printWriter().use {
                                 it.append(Json.encodeToString(dataHistory))
                                 dataHistory.clear()
                             }

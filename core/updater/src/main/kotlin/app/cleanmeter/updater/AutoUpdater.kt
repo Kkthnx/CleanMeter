@@ -1,6 +1,7 @@
 package app.cleanmeter.updater
 
 import app.cleanmeter.core.common.reporting.ApplicationParams
+import app.cleanmeter.core.os.appDataDir
 import app.cleanmeter.core.os.hardwaremonitor.HardwareMonitorProcessManager
 import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.toVersion
@@ -95,7 +96,7 @@ object AutoUpdater {
     private fun downloadUpdatePackage(
         liveVersion: Version,
     ) {
-        val file = File("cleanmeter.windows.$liveVersion.zip")
+        val file = File(appDataDir("Updates"), "cleanmeter.windows.$liveVersion.zip")
         if (file.exists()) {
             _state.update { UpdateState.Downloaded(currentLiveVersion, file) }
             return

@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.cleanmeter.core.designsystem.LocalColorScheme
 import app.cleanmeter.core.designsystem.LocalTypography
+import app.cleanmeter.core.os.appDataDir
 import app.cleanmeter.target.desktop.model.OverlaySettings
 import app.cleanmeter.target.desktop.ui.components.HotKeySymbol
 import app.cleanmeter.target.desktop.ui.components.section.CollapsibleSection
@@ -130,7 +131,7 @@ internal fun HelpSettingsUi(
             onSwitchToggle = { onEvent(SettingsEvent.ToggleLoggingEnabled) }
         ) {
             FilledButton(label = "Save logs to text") {
-                File("cleanmeter.${System.currentTimeMillis()}.log").printWriter()
+                File(appDataDir("Logs"), "cleanmeter.${System.currentTimeMillis()}.log").printWriter()
                     .use { it.print(logSink) }
             }
             SelectionContainer {
