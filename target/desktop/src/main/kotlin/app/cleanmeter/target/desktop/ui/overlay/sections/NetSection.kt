@@ -160,6 +160,11 @@ private fun NetGraph(data: HardwareMonitorData, isHorizontal: Boolean, overlaySe
             blendMode = BlendMode.DstAtop
         }
     }
+    // Constant, so hoisted out of the draw phase instead of allocating a new
+    // list and brush on every redraw. horizontalGradient resolves against
+    // the actual draw size each time, so the same Brush instance is safe to
+    // reuse across draws.
+    val fadeBrush = remember { Brush.horizontalGradient(listOf(Color.Transparent, Color.Black, Color.Black, Color.Black, Color.Transparent)) }
 
     LaunchedEffect(data) {
         val dlRate = data.getReading(overlaySettings.sensors.downRate.customReadingId)?.Value ?: 0f
@@ -180,7 +185,6 @@ private fun NetGraph(data: HardwareMonitorData, isHorizontal: Boolean, overlaySe
         .height(if (isHorizontal) 45.dp else 30.dp)
         .graphicsLayer { alpha = 0.99f }
         .drawWithContent {
-            val colors = listOf(Color.Transparent, Color.Black, Color.Black, Color.Black, Color.Transparent)
             // Each line scales to the larger of its own window and the
             // other's, so one direction maxing out does not make the other
             // look artificially busier than it is.
@@ -199,6 +203,6 @@ private fun NetGraph(data: HardwareMonitorData, isHorizontal: Boolean, overlaySe
                     drawLine(downRateZip, listSize, canvas, downRatePaint)
                 }
             }
-            drawRect(brush = Brush.horizontalGradient(colors), blendMode = BlendMode.DstIn)
+            drawRect(brush = fadeBrush, blendMode = BlendMode.DstIn)
         })
 }

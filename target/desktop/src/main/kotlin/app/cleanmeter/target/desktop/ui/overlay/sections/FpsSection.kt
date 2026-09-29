@@ -193,6 +193,11 @@ private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
             blendMode = BlendMode.DstAtop
         }
     }
+    // Constant, so hoisted out of the draw phase instead of allocating a new
+    // list and brush on every redraw. horizontalGradient resolves against
+    // the actual draw size each time, so the same Brush instance is safe to
+    // reuse across draws.
+    val fadeBrush = remember { Brush.horizontalGradient(listOf(Color.Transparent, Color.Black, Color.Black, Color.Black, Color.Transparent)) }
 
     LaunchedEffect(data) {
         frametimePoints.add(data.Frametime)
@@ -207,7 +212,6 @@ private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
         )
         .graphicsLayer { alpha = 0.99f }
         .drawWithContent {
-            val colors = listOf(Color.Transparent, Color.Black, Color.Black, Color.Black, Color.Transparent)
             // The scale is the max of the window currently on screen, not an
             // all-time high, so one old stutter spike does not flatten the
             // graph forever once it has scrolled out of view.
@@ -218,6 +222,6 @@ private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
                 drawLine(frametimeZip, listSize, canvas, frametimePaint)
             }
 
-            drawRect(brush = Brush.horizontalGradient(colors), blendMode = BlendMode.DstIn)
+            drawRect(brush = fadeBrush, blendMode = BlendMode.DstIn)
         })
 }
