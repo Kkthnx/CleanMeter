@@ -240,9 +240,16 @@ public class MonitorPoller(
         using var memoryStream = new MemoryStream();
         using var writer = new BinaryWriter(memoryStream);
 
+        // A single snapshot rather than reading CurrentApps.Count and then
+        // separately enumerating CurrentApps: HashSet<string> is not
+        // thread-safe, and this runs on whatever thread accepted the pipe
+        // connection while PresentMon's output thread can be adding to it
+        // at the same moment. Reading Count then enumerating separately
+        // could disagree with each other and corrupt this packet's framing.
+        var apps = _presentMonPoller.SnapshotCurrentApps();
         writer.Write((short)MonitorPacketCommand.PresentMonApps);
-        writer.Write((short)_presentMonPoller.CurrentApps.Count);
-        foreach (var app in _presentMonPoller.CurrentApps)
+        writer.Write((short)apps.Length);
+        foreach (var app in apps)
         {
             writer.Write(GetBytes(app, SharedMemoryConsts.NameSize));
         }

@@ -44,6 +44,15 @@ public class PresentMonPoller(ILogger logger)
     private readonly Dictionary<string, int> _frameCounts = new();
     private string? _autoSelectedApp;
 
+    // HashSet<T> is not thread-safe: Add runs on the PresentMon output
+    // thread (many times a second), Clear runs on a separate 10s timer, and
+    // SendPresentMonAppsToClients enumerates it whenever a new pipe client
+    // connects, on yet another thread with no relationship to either. A
+    // client connecting at the wrong moment could throw mid-enumeration or,
+    // worse, read a Count that no longer matches what actually gets
+    // enumerated a line later, corrupting that packet's framing.
+    private readonly object _currentAppsLock = new();
+
     public async void Start(CancellationToken stoppingToken)
     {
         _cultureInfo.NumberFormat.NumberDecimalSeparator = ".";
@@ -122,7 +131,7 @@ public class PresentMonPoller(ILogger logger)
         if (parts.Length < MinExpectedColumns) return;
 
         var appName = parts[0];
-        CurrentApps.Add(appName);
+        lock (_currentAppsLock) CurrentApps.Add(appName);
 
         string? effectiveApp;
         if (_currentSelectedApp == NO_SELECTED_APP)
@@ -247,8 +256,16 @@ public class PresentMonPoller(ILogger logger)
         if (cancellationToken.IsCancellationRequested) return;
         await Task.Delay(10_000, cancellationToken);
         OnUpdateApps?.Invoke();
-        CurrentApps.Clear();
+        lock (_currentAppsLock) CurrentApps.Clear();
         lock (_frameCountLock) _frameCounts.Clear();
         _ = ClearCurrentAppsAsync(cancellationToken);
+    }
+
+    // A single snapshot under the lock so a caller's count and its
+    // enumeration always agree with each other, unlike reading
+    // CurrentApps.Count and then separately enumerating CurrentApps.
+    public string[] SnapshotCurrentApps()
+    {
+        lock (_currentAppsLock) return CurrentApps.ToArray();
     }
 }
