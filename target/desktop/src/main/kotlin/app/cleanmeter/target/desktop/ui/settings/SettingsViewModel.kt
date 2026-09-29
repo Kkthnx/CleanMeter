@@ -200,6 +200,14 @@ class SettingsViewModel : ViewModel() {
             _state.value.overlaySettings?.let {
                 PipeClient.setPollingRate(it.pollingRate)
                 PipeClient.sendPacket(Packet.SelectPollingRate(it.pollingRate.toShort()))
+
+                // The backend starts every run back in Auto mode with no
+                // memory of a previous selection, so a saved non-default
+                // choice needs to be re-applied here rather than silently
+                // reverting without telling the user.
+                if (it.selectedPresentMonApp != "Auto") {
+                    PipeClient.sendPacket(Packet.SelectPresentMonApp(it.selectedPresentMonApp))
+                }
             }
         }
     }
@@ -339,6 +347,8 @@ class SettingsViewModel : ViewModel() {
 
     private fun onFpsApplicationSelect(applicationName: String, settingsState: SettingsState) {
         PipeClient.sendPacket(Packet.SelectPresentMonApp(applicationName))
+        val newSettings = settingsState.overlaySettings?.copy(selectedPresentMonApp = applicationName)
+        OverlaySettingsRepository.setOverlaySettings(newSettings)
     }
 
     private fun onDarkModeToggle(enabled: Boolean, settingsState: SettingsState) {

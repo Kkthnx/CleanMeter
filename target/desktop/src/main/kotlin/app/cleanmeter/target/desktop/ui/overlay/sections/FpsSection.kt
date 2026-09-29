@@ -212,11 +212,19 @@ private fun FrametimeGraph(data: HardwareMonitorData, isHorizontal: Boolean) {
         )
         .graphicsLayer { alpha = 0.99f }
         .drawWithContent {
-            // The scale is the max of the window currently on screen, not an
-            // all-time high, so one old stutter spike does not flatten the
-            // graph forever once it has scrolled out of view.
-            val largest = frametimePoints.maxOrNull()?.takeIf { it > 0f } ?: 1f
-            val frametimeZip = frametimePoints.map { it / largest }.zipWithNext()
+            // Scaled to the min/max of the window currently on screen, not
+            // an all-time high, so one old stutter spike does not flatten
+            // the graph forever once it has scrolled out of view. Dividing
+            // by the max alone (as this used to) squeezes a stable frame
+            // rate into a thin band near the top: a 60fps game hovering
+            // 15-18ms plots as 0.83-1.0, visually flat, exactly when the
+            // point of this graph is to make that kind of small stutter
+            // visible. Min/max stretches whatever range is actually on
+            // screen across the full height instead.
+            val lowest = frametimePoints.minOrNull() ?: 0f
+            val highest = frametimePoints.maxOrNull() ?: 0f
+            val range = (highest - lowest).takeIf { it > 0f }
+            val frametimeZip = frametimePoints.map { range?.let { r -> (it - lowest) / r } ?: 0.5f }.zipWithNext()
 
             drawIntoCanvas { canvas ->
                 drawLine(frametimeZip, listSize, canvas, frametimePaint)

@@ -60,6 +60,7 @@ fun StatsUi(
         onOptionsToggle = onOptionsToggle,
         onFpsApplicationSelect = onFpsApplicationSelect,
         getPresentMonApps = getPresentMonApps,
+        selectedPresentMonApp = overlaySettings.selectedPresentMonApp,
     )
 
     GpuStats(

@@ -20,6 +20,7 @@ internal fun FpsStats(
     onOptionsToggle: (CheckboxSectionOption) -> Unit,
     onFpsApplicationSelect: (String) -> Unit,
     getPresentMonApps: () -> List<String>,
+    selectedPresentMonApp: String,
 ) {
     CustomBodyCheckboxSection(
         title = "FPS",
@@ -42,7 +43,11 @@ internal fun FpsStats(
                         label = "Monitored app:",
                         disclaimer = "Apps are auto updated every 10 seconds.",
                         options = presentMonApps,
-                        selectedIndex = 0,
+                        // Falls back to 0 (Auto, always first per
+                        // HardwareMonitorReader) if the saved selection is
+                        // not in the current app list, e.g. right after
+                        // launch before that app has presented a frame yet.
+                        selectedIndex = presentMonApps.indexOf(selectedPresentMonApp).coerceAtLeast(0),
                         onValueChanged = { onFpsApplicationSelect(presentMonApps[it]) },
                         modifier = Modifier.padding(top = 8.dp)
                     )

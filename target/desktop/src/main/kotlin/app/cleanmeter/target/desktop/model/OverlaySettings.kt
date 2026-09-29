@@ -28,6 +28,11 @@ data class OverlaySettings(
     val isLoggingEnabled: Boolean = false,
     val showOnlyOnGame: Boolean = false,
     val showFrameLows: Boolean = false,
+    // Persisted so the Monitored app dropdown can show what is actually
+    // selected instead of always defaulting to index 0, and so a restart
+    // can restore it: the backend itself has no memory of this across a
+    // relaunch and always starts back in Auto mode.
+    val selectedPresentMonApp: String = "Auto",
     val sensors: Sensors = Sensors(),
 ) {
     @Serializable
