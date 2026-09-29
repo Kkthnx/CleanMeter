@@ -57,15 +57,14 @@ compose.desktop {
     application {
 
         afterEvaluate {
-            // Every task that assembles a distributable image (the loose app
-            // folder and every jpackage exe/msi task) needs the native files
-            // present before it runs, not after, so this is dependsOn rather
-            // than finalizedBy.
-            tasks.matching { task ->
-                task.name == "createDistributable" ||
-                    task.name == "runDistributable" ||
-                    task.name.startsWith("package")
-            }.configureEach {
+            // prepareAppResources is Compose's own task that Syncs
+            // appResourcesRootDir into every distributable image, so hooking
+            // it here (rather than createDistributable/packageExe, which
+            // both depend on it) covers the zip and every jpackage exe/msi
+            // task from the one place that actually reads this output.
+            // Gradle's own task validation caught the earlier, looser hook:
+            // it read copyMonitorFiles' output with no declared dependency.
+            tasks.matching { it.name == "prepareAppResources" }.configureEach {
                 dependsOn(copyMonitorFiles)
             }
         }
