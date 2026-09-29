@@ -9,10 +9,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStream
+import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -50,8 +48,18 @@ sealed class Packet {
 object PipeClient {
 
     private val pipeName = "\\\\.\\pipe\\HardwareMonitor_31337"
-    private var pipeInputStream: FileInputStream? = null
-    private var pipeOutputStream: FileOutputStream? = null
+
+    // A single bidirectional connection, not one FileInputStream plus a
+    // separately opened FileOutputStream. Two separate opens meant the
+    // server (which treats every connected pipe instance as a broadcast
+    // target) was also pushing Data packets into the write-only connection,
+    // which this client never read. That connection's buffer filled within
+    // seconds of the first sendPacket() call, and the server's next
+    // broadcast write to it then blocked forever inside Task.WhenAll,
+    // freezing every client's updates with no exception and no crash.
+    // Verified against a real named pipe server: RandomAccessFile("rw")
+    // opens one handle that can both read and write.
+    private var pipeFile: RandomAccessFile? = null
     private var pollingRate = 500L
 
     private val packetChannel = Channel<Packet>(Channel.CONFLATED)
@@ -71,7 +79,7 @@ object PipeClient {
             if (!isConnected()) {
                 try {
                     close()
-                    pipeInputStream = FileInputStream(pipeName)
+                    pipeFile = RandomAccessFile(pipeName, "rw")
                     println("Connected to the HardwareMonitor pipe")
                     reportedWaiting = false
                 } catch (ex: Exception) {
@@ -85,16 +93,16 @@ object PipeClient {
                 }
             }
 
-            pipeInputStream?.let { inputStream ->
+            pipeFile?.let { file ->
                 try {
                     while (isConnected()) {
 
                         // Read command (2 bytes)
-                        val commandBytes = readExactly(inputStream, COMMAND_SIZE)
+                        val commandBytes = readExactly(file, COMMAND_SIZE)
                         val command = Command.fromValue(ByteBuffer.wrap(commandBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).short)
 
                         // Read size (4 bytes)
-                        val sizeBytes = readExactly(inputStream, LENGTH_SIZE)
+                        val sizeBytes = readExactly(file, LENGTH_SIZE)
                         val size = ByteBuffer.wrap(sizeBytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).int
 
                         if (size < 0) { // Sanity check
@@ -102,7 +110,7 @@ object PipeClient {
                         }
 
                         // Read payload
-                        val payload = readExactly(inputStream, size)
+                        val payload = readExactly(file, size)
                         when (command) {
                             Command.Data -> packetChannel.trySend(Packet.Data(payload))
                             Command.PresentMonApps -> packetChannel.trySend(Packet.PresentMonApps(payload))
@@ -127,16 +135,16 @@ object PipeClient {
     }
 
     private fun isConnected(): Boolean {
-        return pipeInputStream != null
+        return pipeFile != null
     }
 
-    // Helper function to read exactly n bytes from InputStream
-    private fun readExactly(inputStream: InputStream, count: Int): ByteArray {
+    // Helper function to read exactly n bytes from the pipe
+    private fun readExactly(file: RandomAccessFile, count: Int): ByteArray {
         val buffer = ByteArray(count)
         var totalRead = 0
 
         while (totalRead < count) {
-            val bytesRead = inputStream.read(buffer, totalRead, count - totalRead)
+            val bytesRead = file.read(buffer, totalRead, count - totalRead)
             if (bytesRead == -1) {
                 throw IOException("Pipe closed while reading")
             }
@@ -152,38 +160,24 @@ object PipeClient {
     }
 
     fun sendPacket(packet: Packet) {
-        // Open output stream only when needed
-        if (pipeOutputStream == null && pipeInputStream != null) {
-            try {
-                pipeOutputStream = FileOutputStream(pipeName, true) // append mode
-            } catch (e: Exception) {
-                println("Error opening output stream: ${e.message}")
-                return
-            }
-        }
-
-        pipeOutputStream?.let { stream ->
+        pipeFile?.let { file ->
             try {
                 val data = packet.toByteArray()
-                stream.write(data)
-                stream.flush()
+                file.write(data)
             } catch (e: Exception) {
                 println("Error sending packet: ${e.message}")
-                pipeOutputStream?.close()
-                pipeOutputStream = null
+                close()
             }
         }
     }
 
     fun close() {
         try {
-            pipeInputStream?.close()
-            pipeOutputStream?.close()
+            pipeFile?.close()
         } catch (e: Exception) {
             println("Error closing pipe: ${e.message}")
         } finally {
-            pipeInputStream = null
-            pipeOutputStream = null
+            pipeFile = null
         }
     }
 }
