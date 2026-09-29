@@ -57,7 +57,7 @@ internal fun CpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
             if (overlaySettings.sensors.cpuConsumption.isValid()) {
                 val reading = data.getReading(overlaySettings.sensors.cpuConsumption.customReadingId)
                 Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.widthIn(min = 35.dp).padding(bottom = 2.dp)) {
-                    ProgressLabel(if (reading == null) "--" else "${reading.Value.toInt()}")
+                    ProgressLabel(if (reading == null) "--" else "${reading.Value.roundToInt()}")
                     ProgressUnit("W")
                 }
             }

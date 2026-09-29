@@ -57,9 +57,15 @@ internal fun GpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                 val totalVramUsedReading = data.getReading(overlaySettings.sensors.totalVramUsed.customReadingId)
                 val isMissing = vramUsageReading == null || totalVramUsedReading == null
 
+                // LibreHardwareMonitor's GPU memory sensors report raw
+                // bytes on both AMD (vramUsed * 1024f * 1024f in AmdGpu.cs)
+                // and Nvidia (CurrentAvailableDedicatedVideoMemory * 1024UL
+                // in NvidiaGpu.cs, KB to bytes), confirmed against their
+                // actual source. Dividing by 1000 instead of 1024^3 showed
+                // millions instead of single-digit GB.
                 Progress(
                     value = if (isMissing) 0f else (vramUsageReading?.Value ?: 0f) / 100f,
-                    label = if (isMissing) "--" else String.format("%02.1f", (totalVramUsedReading?.Value ?: 0f) / 1000, Locale.US),
+                    label = if (isMissing) "--" else String.format("%02.1f", (totalVramUsedReading?.Value ?: 0f) / (1024f * 1024f * 1024f), Locale.US),
                     unit = "GB",
                     progressType = overlaySettings.progressType,
                     boundaries = overlaySettings.sensors.vramUsage.boundaries,
@@ -69,7 +75,7 @@ internal fun GpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
             if (overlaySettings.sensors.gpuConsumption.isValid()) {
                 val reading = data.getReading(overlaySettings.sensors.gpuConsumption.customReadingId)
                 Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.widthIn(min = 35.dp).padding(bottom = 2.dp)) {
-                    ProgressLabel(if (reading == null) "--" else "${reading.Value.toInt()}")
+                    ProgressLabel(if (reading == null) "--" else "${reading.Value.roundToInt()}")
                     ProgressUnit("W")
                 }
             }
