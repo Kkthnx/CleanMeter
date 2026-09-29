@@ -63,28 +63,35 @@ object AutoUpdater {
         val state = _state.value
         if (state !is UpdateState.Downloaded) return
 
-        if (ApplicationParams.isAutostart) {
-            HardwareMonitorProcessManager.stopService()
-        } else {
-            HardwareMonitorProcessManager.stop()
+        // stop()/stopService() now block until the backend is genuinely
+        // gone (a prerequisite for the update to safely overwrite its
+        // files), which callers like a Compose click handler run on the UI
+        // thread by default. The app is about to exit either way, but it
+        // should not sit frozen for several seconds first.
+        CoroutineScope(Dispatchers.IO).launch {
+            if (ApplicationParams.isAutostart) {
+                HardwareMonitorProcessManager.stopService()
+            } else {
+                HardwareMonitorProcessManager.stop()
+            }
+
+            val installDir = Path.of("").toAbsolutePath().toString()
+            val updaterExe = "$installDir\\app\\resources\\Updater.exe"
+            val ownPid = ProcessHandle.current().pid()
+
+            // Launched directly rather than through cmd.exe, since cmd
+            // splits an unquoted path on its first space and this path
+            // lives under Program Files on a default install.
+            ProcessBuilder(
+                updaterExe,
+                "--package=${state.file.absolutePath}",
+                "--path=$installDir",
+                "--autostart=${ApplicationParams.isAutostart}",
+                "--pid=$ownPid",
+            ).start()
+
+            exitProcess(0)
         }
-
-        val installDir = Path.of("").toAbsolutePath().toString()
-        val updaterExe = "$installDir\\app\\resources\\Updater.exe"
-        val ownPid = ProcessHandle.current().pid()
-
-        // Launched directly rather than through cmd.exe, since cmd splits
-        // an unquoted path on its first space and this path lives under
-        // Program Files on a default install.
-        ProcessBuilder(
-            updaterExe,
-            "--package=${state.file.absolutePath}",
-            "--path=$installDir",
-            "--autostart=${ApplicationParams.isAutostart}",
-            "--pid=$ownPid",
-        ).start()
-
-        exitProcess(0)
     }
 
     fun cancelDownload() {

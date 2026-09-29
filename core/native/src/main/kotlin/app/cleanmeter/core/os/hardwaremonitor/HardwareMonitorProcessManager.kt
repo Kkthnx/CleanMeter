@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 object HardwareMonitorProcessManager {
     private var process: Process? = null
@@ -53,10 +54,22 @@ object HardwareMonitorProcessManager {
     }
 
     fun stop() {
-        process?.apply {
-            descendants().forEach(ProcessHandle::destroy)
-            destroy()
+        val proc = process ?: return
+        // destroy() only requests termination, it does not wait for it, so
+        // an update applied right after this call could still find these
+        // exe files locked. Callers that need the backend genuinely gone
+        // (an update about to overwrite its own files) rely on this
+        // actually blocking rather than firing and forgetting.
+        val descendants = proc.descendants().toList()
+        descendants.forEach(ProcessHandle::destroy)
+        proc.destroy()
+
+        descendants.forEach { runCatching { it.onExit().get(5, TimeUnit.SECONDS) } }
+        if (!proc.waitFor(5, TimeUnit.SECONDS)) {
+            descendants.forEach { if (it.isAlive) it.destroyForcibly() }
+            proc.destroyForcibly()
         }
+
         process = null
     }
 
@@ -74,13 +87,22 @@ object HardwareMonitorProcessManager {
     }
 
     fun stopService() {
-        ProcessBuilder().apply {
-            command(
-                "cmd.exe",
-                "/c",
-                "sc stop svcleanmeter"
-            )
-        }.start()
+        // "sc stop" returns as soon as the stop request is accepted, not
+        // once the service actually stops, which matters to any caller that
+        // needs HardwareMonitor.exe genuinely gone (an update about to
+        // overwrite it). Polling "sc query" until it reports STOPPED closes
+        // that gap; the request itself is still given a moment to land
+        // first.
+        ProcessBuilder("cmd.exe", "/c", "sc stop svcleanmeter").start().waitFor(5, TimeUnit.SECONDS)
+
+        val deadline = System.currentTimeMillis() + 10_000
+        while (System.currentTimeMillis() < deadline) {
+            val query = ProcessBuilder("cmd.exe", "/c", "sc query svcleanmeter").start()
+            val output = query.inputStream.bufferedReader().readText()
+            query.waitFor(2, TimeUnit.SECONDS)
+            if ("STOPPED" in output) return
+            Thread.sleep(500)
+        }
     }
 
     fun deleteService() {

@@ -32,6 +32,10 @@ import app.cleanmeter.target.desktop.ui.components.dropdown.DropdownMenu
 import app.cleanmeter.target.desktop.ui.components.section.Section
 import app.cleanmeter.target.desktop.ui.settings.FooterUi
 import app.cleanmeter.target.desktop.ui.settings.SettingsEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun AppSettingsUi(
@@ -132,7 +136,13 @@ private fun startWithWindowsCheckbox() {
 
     LaunchedEffect(Unit) {
         if (state) {
-            WinRegistry.removeAppFromStartWithWindows()
+            // removeAppFromStartWithWindows can wait for svcleanmeter to
+            // actually stop (up to ~15s in the worst case), and
+            // LaunchedEffect runs on the composition's own dispatcher, the
+            // UI thread here, so this needs to be off it explicitly.
+            withContext(Dispatchers.IO) {
+                WinRegistry.removeAppFromStartWithWindows()
+            }
         }
     }
 
@@ -143,10 +153,12 @@ private fun startWithWindowsCheckbox() {
             enabled = false,
             onCheckedChange = { value ->
                 state = value
-                if (value) {
-                    WinRegistry.registerAppToStartWithWindows()
-                } else {
-                    WinRegistry.removeAppFromStartWithWindows()
+                CoroutineScope(Dispatchers.IO).launch {
+                    if (value) {
+                        WinRegistry.registerAppToStartWithWindows()
+                    } else {
+                        WinRegistry.removeAppFromStartWithWindows()
+                    }
                 }
             }
         )
