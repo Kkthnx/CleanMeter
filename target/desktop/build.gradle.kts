@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import java.time.Year
 
 // Compose reads this root at packaging time for every distributable target
@@ -83,9 +82,12 @@ compose.desktop {
 
             // Windows no longer uses jpackage's own exe/msi bundler; the
             // installer is built by our own WiX project instead (see
-            // target/desktop/wix/main.wxs for why). Deb packaging for Linux
-            // is unaffected and still goes through jpackage normally.
-            targetFormats(TargetFormat.Deb)
+            // target/desktop/wix/main.wxs for why). No Linux target: the
+            // backend is Windows-only (compiled -r win-x64, Windows named
+            // pipes, WMI, WindowsService/WinRegistry JNA calls), so a Linux
+            // build would launch the UI but never find a backend to
+            // connect to.
+            targetFormats()
 
             packageName = "cleanmeter"
             packageVersion = projectVersion
@@ -96,10 +98,6 @@ compose.desktop {
             appResourcesRootDir.set(layout.buildDirectory.dir("monitorResources"))
 
             includeAllModules = true
-
-            linux {
-                iconFile.set(project.file("src/main/resources/imgs/logo.png"))
-            }
         }
     }
 }

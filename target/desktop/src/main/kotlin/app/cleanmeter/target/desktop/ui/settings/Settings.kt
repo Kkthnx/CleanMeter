@@ -143,7 +143,7 @@ private fun BoxScope.AdminConsent(
 
         Text(
             text = "Thank you for choosing CleanMeter!\n\n" +
-                    "To function properly, CleanMeter requires administrative permissions and access to your local network. This is necessary for our processes to communicate with each other using sockets.\n\n" +
+                    "To function properly, CleanMeter requires administrative permissions. This is necessary to read hardware sensors like CPU and GPU temperature, which Windows only exposes to elevated processes.\n\n" +
                     "If you’re okay with this, please grant the permissions below.",
             textAlign = TextAlign.Center,
             style = LocalTypography.current.labelLMedium.copy(
