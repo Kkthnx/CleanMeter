@@ -80,14 +80,18 @@ compose.desktop {
         nativeDistributions {
             val projectVersion: String by project
 
-            // Windows no longer uses jpackage's own exe/msi bundler; the
-            // installer is built by our own WiX project instead (see
+            // No targetFormats() call at all: createDistributable and
+            // runDistributable (all this project uses now) don't depend on
+            // it, and calling it with zero formats throws "Collection is
+            // empty" from Compose Desktop's own internals rather than being
+            // the safe no-op it looked like. Windows no longer uses
+            // jpackage's own exe/msi bundler either way; the installer is
+            // built by our own WiX project instead (see
             // target/desktop/wix/main.wxs for why). No Linux target: the
             // backend is Windows-only (compiled -r win-x64, Windows named
             // pipes, WMI, WindowsService/WinRegistry JNA calls), so a Linux
             // build would launch the UI but never find a backend to
             // connect to.
-            targetFormats()
 
             packageName = "cleanmeter"
             packageVersion = projectVersion
