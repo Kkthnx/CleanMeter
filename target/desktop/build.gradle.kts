@@ -21,6 +21,11 @@ val copyMonitorFiles = tasks.register<Copy>("copyMonitorFiles") {
     // presentmon/ on every publish.
     dependsOn(compileMonitor)
     from("../../HardwareMonitor/HardwareMonitor/bin/Release/net8.0/win-x64/native")
+    // Updater.exe: applies a downloaded update by waiting for cleanmeter.exe
+    // to exit, extracting the new release over the install directory, and
+    // relaunching. compileMonitor's dotnet publish runs from the solution
+    // directory and AOT-publishes every project in it, Updater included.
+    from("../../HardwareMonitor/Updater/bin/Release/net8.0/win-x64/native")
     into(monitorResourcesDir)
 }
 

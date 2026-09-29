@@ -23,8 +23,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.awt.Desktop
 import java.io.File
+import java.nio.file.Path
 import kotlin.system.exitProcess
 
 sealed class UpdateState {
@@ -59,7 +59,7 @@ object AutoUpdater {
         }
     }
 
-    fun prepareForManualUpdate() {
+    fun applyUpdate() {
         val state = _state.value
         if (state !is UpdateState.Downloaded) return
 
@@ -68,7 +68,22 @@ object AutoUpdater {
         } else {
             HardwareMonitorProcessManager.stop()
         }
-        Desktop.getDesktop().open(state.file?.absoluteFile)
+
+        val installDir = Path.of("").toAbsolutePath().toString()
+        val updaterExe = "$installDir\\app\\resources\\Updater.exe"
+        val ownPid = ProcessHandle.current().pid()
+
+        // Launched directly rather than through cmd.exe, since cmd splits
+        // an unquoted path on its first space and this path lives under
+        // Program Files on a default install.
+        ProcessBuilder(
+            updaterExe,
+            "--package=${state.file.absolutePath}",
+            "--path=$installDir",
+            "--autostart=${ApplicationParams.isAutostart}",
+            "--pid=$ownPid",
+        ).start()
+
         exitProcess(0)
     }
 

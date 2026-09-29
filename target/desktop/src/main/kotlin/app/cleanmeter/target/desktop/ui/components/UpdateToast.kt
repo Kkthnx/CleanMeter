@@ -94,7 +94,7 @@ internal fun BoxScope.UpdateToast() {
                 state = updaterState,
                 onCloseClick = { visible = false },
                 onInstallClick = {
-                    AutoUpdater.prepareForManualUpdate()
+                    AutoUpdater.applyUpdate()
                 },
                 onUpdateClick = {
                     AutoUpdater.downloadUpdate()
