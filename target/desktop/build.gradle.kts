@@ -1,21 +1,26 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import java.time.Year
 
-val copyPresentMon = tasks.register<Copy>("copyPresentMon") {
-    from("../../HardwareMonitor/HardwareMonitor/bin/Release/net8.0/win-x64/presentmon")
-    into(layout.buildDirectory.dir("compose/binaries/main/app/cleanmeter/app/resources"))
+// Compose reads this root at packaging time for every distributable target
+// (createDistributable, runDistributable, and every jpackage exe/msi task),
+// merging the per-OS subfolder into that build's app/resources. Writing into
+// a build output folder directly, like these tasks used to, only reaches
+// createDistributable's own output and never the installer's, since jpackage
+// builds its own app image from this root rather than from that folder.
+val monitorResourcesDir = layout.buildDirectory.dir("monitorResources/windows")
+
+val compileMonitor = tasks.register<Exec>("compileMonitor") {
+    workingDir("../../HardwareMonitor/")
+    commandLine("dotnet", "publish", "-c", "Release", "-r", "win-x64", "-p:PublishAot=true")
 }
 
 val copyMonitorFiles = tasks.register<Copy>("copyMonitorFiles") {
-//    finalizedBy(copyPresentMon)
+    // presentmon.exe lands in this same folder too: HardwareMonitor.csproj's
+    // own CopyPresentMon AfterBuild target puts it there from repo-root
+    // presentmon/ on every publish.
+    dependsOn(compileMonitor)
     from("../../HardwareMonitor/HardwareMonitor/bin/Release/net8.0/win-x64/native")
-    into(layout.buildDirectory.dir("compose/binaries/main/app/cleanmeter/app/resources"))
-}
-
-val compileMonitor = tasks.register<Exec>("compileMonitor") {
-    finalizedBy(copyMonitorFiles)
-    workingDir("../../HardwareMonitor/")
-    commandLine("dotnet", "publish", "-c", "Release", "-r", "win-x64", "-p:PublishAot=true")
+    into(monitorResourcesDir)
 }
 
 plugins {
@@ -52,11 +57,16 @@ compose.desktop {
     application {
 
         afterEvaluate {
-            tasks.named("createDistributable") {
-                finalizedBy(compileMonitor)
-            }
-            tasks.named("runDistributable") {
-                finalizedBy(compileMonitor)
+            // Every task that assembles a distributable image (the loose app
+            // folder and every jpackage exe/msi task) needs the native files
+            // present before it runs, not after, so this is dependsOn rather
+            // than finalizedBy.
+            tasks.matching { task ->
+                task.name == "createDistributable" ||
+                    task.name == "runDistributable" ||
+                    task.name.startsWith("package")
+            }.configureEach {
+                dependsOn(copyMonitorFiles)
             }
         }
 
@@ -77,6 +87,7 @@ compose.desktop {
             description = "Lightweight hardware monitor overlay for gaming"
             copyright = "Copyright (c) ${Year.now()} Kkthnx"
             licenseFile.set(project.file("../../LICENSE"))
+            appResourcesRootDir.set(layout.buildDirectory.dir("monitorResources"))
 
             includeAllModules = true
 
