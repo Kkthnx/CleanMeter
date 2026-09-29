@@ -42,7 +42,13 @@ fun DropdownMenu(
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(options[selectedIndex]) }
+    // Derived directly from the current props on every recomposition rather
+    // than a separately remembered copy, which only initialized once and
+    // never reflected a selectedIndex that changed from outside a direct
+    // click here, e.g. the underlying list reordering (PresentMonApps is
+    // rebuilt from a HashSet, whose iteration order is not guaranteed
+    // stable between rebuilds).
+    val selectedOption = options.getOrElse(selectedIndex) { "" }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -106,7 +112,6 @@ fun DropdownMenu(
                 DropdownMenuItem(
                     onClick = {
                         expanded = false
-                        selectedOption = item
                         onValueChanged(index)
                     },
                 ) {

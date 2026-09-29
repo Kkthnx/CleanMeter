@@ -71,7 +71,12 @@ fun SensorReadingDropdownMenu(
     dropdownLabel: (HardwareMonitorData.Sensor) -> String = { "${it.Name} (${it.Value} - ${it.SensorType})" },
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(if (selectedIndex >= 0) options[selectedIndex] else InvalidSensor) }
+    // Derived directly from the current props on every recomposition rather
+    // than a separately remembered copy, which only initialized once and
+    // never reflected a selectedIndex that changed from outside a direct
+    // click here, e.g. the underlying sensor list's order shifting as
+    // hardware data refreshes.
+    val selectedOption = options.getOrNull(selectedIndex) ?: InvalidSensor
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -86,7 +91,6 @@ fun SensorReadingDropdownMenu(
             sensorName = sensorName,
             onValueChanged = {
                 expanded = false
-                selectedOption = it
                 onValueChanged(it)
             },
             selectedIndex = selectedIndex,
