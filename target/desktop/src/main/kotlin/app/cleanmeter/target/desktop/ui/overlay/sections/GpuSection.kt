@@ -57,15 +57,15 @@ internal fun GpuSection(overlaySettings: OverlaySettings, data: HardwareMonitorD
                 val totalVramUsedReading = data.getReading(overlaySettings.sensors.totalVramUsed.customReadingId)
                 val isMissing = vramUsageReading == null || totalVramUsedReading == null
 
-                // LibreHardwareMonitor's GPU memory sensors report raw
-                // bytes on both AMD (vramUsed * 1024f * 1024f in AmdGpu.cs)
-                // and Nvidia (CurrentAvailableDedicatedVideoMemory * 1024UL
-                // in NvidiaGpu.cs, KB to bytes), confirmed against their
-                // actual source. Dividing by 1000 instead of 1024^3 showed
-                // millions instead of single-digit GB.
+                // Confirmed against the actual pinned LibreHardwareMonitorLib
+                // v0.9.6 tag (not master, which has since changed this): every
+                // GPU memory sensor on both AMD and Nvidia (GPU Memory
+                // Total/Used, D3D Dedicated, D3D Shared) divides by 1024*1024
+                // at the point Value is set, in AmdGpu.cs and NvidiaGpu.cs, so
+                // all of them are already in MB here. MB to GB is / 1024.
                 Progress(
                     value = if (isMissing) 0f else (vramUsageReading?.Value ?: 0f) / 100f,
-                    label = if (isMissing) "--" else String.format("%02.1f", (totalVramUsedReading?.Value ?: 0f) / (1024f * 1024f * 1024f), Locale.US),
+                    label = if (isMissing) "--" else String.format("%02.1f", (totalVramUsedReading?.Value ?: 0f) / 1024f, Locale.US),
                     unit = "GB",
                     progressType = overlaySettings.progressType,
                     boundaries = overlaySettings.sensors.vramUsage.boundaries,
