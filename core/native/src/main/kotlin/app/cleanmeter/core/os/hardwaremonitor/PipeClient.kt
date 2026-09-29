@@ -115,6 +115,12 @@ object PipeClient {
                     println("Error while listening for packets: ${e.message}")
                     e.printStackTrace()
                     close()
+                    // Without this, a pipe that keeps opening but immediately
+                    // failing to read (the backend restarting, a stale pipe
+                    // instance) retries with no backoff at all, since this
+                    // path skips the delay the initial-connect failure below
+                    // already has.
+                    delay(pollingRate)
                 }
             }
         }

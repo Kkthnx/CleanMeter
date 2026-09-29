@@ -42,7 +42,8 @@ val positions = listOf(
 @Composable
 fun ApplicationScope.OverlayWindow(
     viewModel: OverlayViewModel = viewModel(ApplicationViewModelStoreOwner),
-    onPositionChanged: (IntOffset) -> Unit
+    onPositionChanged: (IntOffset) -> Unit,
+    quit: () -> Unit,
 ) {
     val overlayState by viewModel.state.collectAsState(OverlayState())
 
@@ -89,7 +90,7 @@ fun ApplicationScope.OverlayWindow(
 
     Window(
         state = overlayWindowState,
-        onCloseRequest = { exitApplication() },
+        onCloseRequest = quit,
         visible = isVisible && (!showOnlyOnGame || isGaming),
         title = "Clean Meter",
         resizable = false,

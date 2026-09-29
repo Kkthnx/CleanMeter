@@ -17,7 +17,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.rememberWindowState
 import app.cleanmeter.core.os.PREFERENCE_START_MINIMIZED
 import app.cleanmeter.core.os.PreferencesRepository
-import com.github.kwhat.jnativehook.GlobalScreen
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.awt.GraphicsEnvironment
@@ -27,7 +26,7 @@ import kotlin.math.min
 fun ApplicationScope.SettingsWindow(
     isDarkTheme: Boolean,
     getOverlayPosition: () -> IntOffset,
-    onApplicationExit: () -> Unit,
+    quit: () -> Unit,
 ) {
     val maximumWindowBounds = remember { GraphicsEnvironment.getLocalGraphicsEnvironment().maximumWindowBounds.height }
     val minimumHeight = remember { min(800, maximumWindowBounds) }
@@ -69,7 +68,7 @@ fun ApplicationScope.SettingsWindow(
             onCloseRequest = { isVisible = false },
             onMinimizeRequest = { state.isMinimized = true },
             getOverlayPosition = getOverlayPosition,
-            onExitRequest = { exitApplication() }
+            onExitRequest = quit
         )
     }
 
@@ -78,14 +77,7 @@ fun ApplicationScope.SettingsWindow(
             icon = icon,
             onAction = { isVisible = true },
             menu = {
-                Item("Quit", onClick = {
-                    try {
-                        GlobalScreen.unregisterNativeHook()
-                    } catch (e: Exception) {
-                    }
-                    onApplicationExit()
-                    exitApplication()
-                })
+                Item("Quit", onClick = quit)
             }
         )
     }
