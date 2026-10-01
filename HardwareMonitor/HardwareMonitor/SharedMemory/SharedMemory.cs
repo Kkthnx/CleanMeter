@@ -1,4 +1,5 @@
-﻿using LibreHardwareMonitor.Hardware;
+﻿using System.Text;
+using LibreHardwareMonitor.Hardware;
 
 namespace HardwareMonitor.SharedMemory;
 
@@ -35,6 +36,15 @@ public class SharedMemoryHardware
     public required string Identifier { get; set; }
     public required HardwareType HardwareType { get; set; }
 
+    // Name/Identifier never change after this object is built once at
+    // startup and reused for every poll thereafter, so these are computed
+    // once here instead of UTF8-encoding the same strings again on every
+    // single poll in MonitorPoller.WriteDataToStream.
+    private byte[]? _nameBytes;
+    private byte[]? _identifierBytes;
+    public byte[] NameBytes => _nameBytes ??= Encoding.UTF8.GetBytes(Name);
+    public byte[] IdentifierBytes => _identifierBytes ??= Encoding.UTF8.GetBytes(Identifier);
+
     private bool _isActive = true;
 
     public void Update()
@@ -59,6 +69,17 @@ public class SharedMemorySensor
     public required string HardwareIdentifier { get; set; }
     public required SensorType SensorType { get; set; }
     public required float Value { get; set; }
+
+    // Same reasoning as SharedMemoryHardware above: these three strings
+    // never change after construction, but this is the most frequently
+    // iterated collection (every sensor, every poll), so this is the
+    // biggest share of the saved allocations.
+    private byte[]? _nameBytes;
+    private byte[]? _identifierBytes;
+    private byte[]? _hardwareIdentifierBytes;
+    public byte[] NameBytes => _nameBytes ??= Encoding.UTF8.GetBytes(Name);
+    public byte[] IdentifierBytes => _identifierBytes ??= Encoding.UTF8.GetBytes(Identifier);
+    public byte[] HardwareIdentifierBytes => _hardwareIdentifierBytes ??= Encoding.UTF8.GetBytes(HardwareIdentifier);
 };
 
 public class SharedMemoryData

@@ -1,6 +1,5 @@
 ﻿#pragma warning disable CS8601 // Possible null
 
-using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using HardwareMonitor.PresentMon;
@@ -136,25 +135,44 @@ public class MonitorPoller(
 
         foreach (var hardware in sharedMemoryData.Hardwares)
         {
-            writer.Write((short)hardware.Name.Length);
-            writer.Write((short)hardware.Identifier.Length);
-            writer.Write(Encoding.UTF8.GetBytes(hardware.Name));
-            writer.Write(Encoding.UTF8.GetBytes(hardware.Identifier));
+            // Name/Identifier are fixed once this object is built at
+            // startup, so NameBytes/IdentifierBytes are UTF8-encoded once
+            // and cached rather than redone on every single poll. The
+            // declared length comes from the same cached array actually
+            // written, rather than the separate Name.Length (a char count,
+            // not a byte count, though they happen to be equal today since
+            // names are ASCII-only).
+            var nameBytes = hardware.NameBytes;
+            var identifierBytes = hardware.IdentifierBytes;
+            writer.Write((short)nameBytes.Length);
+            writer.Write((short)identifierBytes.Length);
+            writer.Write(nameBytes);
+            writer.Write(identifierBytes);
             writer.Write((int)hardware.HardwareType);
         }
 
         foreach (var sensor in sharedMemoryData.Sensors)
         {
+            // This used to round-trip through ToString()/float.Parse(), which
+            // did nothing but allocate a string: the ternary already
+            // produces the cleaned float directly, and the value is written
+            // below as a raw binary float, never as text.
             var value = sensor.HardwareSensor.Value ?? 0f;
-            var floatValue = (IsNaN(value) ? 0f : value).ToString(CultureInfo.InvariantCulture);
-            sensor.Value = float.Parse(floatValue, CultureInfo.InvariantCulture);
+            sensor.Value = IsNaN(value) ? 0f : value;
 
-            writer.Write((short)sensor.Name.Length);
-            writer.Write((short)sensor.Identifier.Length);
-            writer.Write((short)sensor.HardwareIdentifier.Length);
-            writer.Write(Encoding.UTF8.GetBytes(sensor.Name));
-            writer.Write(Encoding.UTF8.GetBytes(sensor.Identifier));
-            writer.Write(Encoding.UTF8.GetBytes(sensor.HardwareIdentifier));
+            // Same caching as the hardware loop above: these three strings
+            // are fixed once this object is built at startup, so this is
+            // the single biggest allocation source removed here, since
+            // sensors are the most frequently iterated collection.
+            var nameBytes = sensor.NameBytes;
+            var identifierBytes = sensor.IdentifierBytes;
+            var hardwareIdentifierBytes = sensor.HardwareIdentifierBytes;
+            writer.Write((short)nameBytes.Length);
+            writer.Write((short)identifierBytes.Length);
+            writer.Write((short)hardwareIdentifierBytes.Length);
+            writer.Write(nameBytes);
+            writer.Write(identifierBytes);
+            writer.Write(hardwareIdentifierBytes);
             writer.Write((int)sensor.SensorType);
             writer.Write((float)sensor.Value);
         }
