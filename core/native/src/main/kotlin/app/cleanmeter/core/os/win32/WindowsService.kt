@@ -60,13 +60,20 @@ class WindowsService {
 
         fun changeWindowTransparency(w: Component, isTransparent: Boolean) {
             val hwnd = HWND().apply { pointer = Native.getComponentPointer(w) }
+            // The unlocked branch used to clear only WS_EX_TRANSPARENT, never
+            // WS_EX_NOACTIVATE, so once the overlay was locked once,
+            // NOACTIVATE stayed set forever even after unlocking: the
+            // window could never become the foreground/focused window on
+            // click again, since that is exactly what NOACTIVATE prevents.
             val wl = if (isTransparent) {
                 User32.INSTANCE.GetWindowLong(
                     hwnd,
                     WinUser.GWL_EXSTYLE
                 ) or WinUser.WS_EX_LAYERED or WinUser.WS_EX_TRANSPARENT or WS_EX_NOACTIVATE
             } else {
-                User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE) or WinUser.WS_EX_LAYERED and WinUser.WS_EX_TRANSPARENT.inv()
+                (User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE) or WinUser.WS_EX_LAYERED) and
+                    WinUser.WS_EX_TRANSPARENT.inv() and
+                    WS_EX_NOACTIVATE.inv()
             }
             User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl)
         }

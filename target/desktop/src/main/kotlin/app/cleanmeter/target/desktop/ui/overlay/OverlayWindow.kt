@@ -2,11 +2,13 @@ package app.cleanmeter.target.desktop.ui.overlay
 
 import androidx.compose.foundation.window.WindowDraggableArea
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.DpSize
@@ -100,11 +102,25 @@ fun ApplicationScope.OverlayWindow(
         focusable = !overlayState.overlaySettings!!.isPositionLocked,
         enabled = !overlayState.overlaySettings!!.isPositionLocked,
     ) {
-        window.addComponentListener(object : ComponentAdapter() {
-            override fun componentMoved(e: ComponentEvent) {
-                onPositionChanged(IntOffset(e.component.x, e.component.y))
+        // This composable body reruns on every recomposition (every data
+        // poll), and addComponentListener was called directly in it with no
+        // remember/DisposableEffect, so every single one of those left a
+        // brand new, never-removed listener on the window: all of them
+        // still firing, forever, stacking up for as long as the overlay
+        // stays open. onPositionChanged is wrapped through
+        // rememberUpdatedState so the one listener this now adds always
+        // calls whatever the current callback is, not whichever one was
+        // live the moment it was first added.
+        val currentOnPositionChanged by rememberUpdatedState(onPositionChanged)
+        DisposableEffect(window) {
+            val listener = object : ComponentAdapter() {
+                override fun componentMoved(e: ComponentEvent) {
+                    currentOnPositionChanged(IntOffset(e.component.x, e.component.y))
+                }
             }
-        })
+            window.addComponentListener(listener)
+            onDispose { window.removeComponentListener(listener) }
+        }
 
         LaunchedEffect(overlayState.overlaySettings) {
             if (overlayState.overlaySettings!!.positionIndex < 6) {
